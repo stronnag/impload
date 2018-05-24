@@ -32,7 +32,7 @@ Usage of ./impload [options] command [files ...]
 
 * Plan missions in apm / qpc, upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
-* Backup missions made in the configurator
+* Backup missions made in the configurator (as MW XML mission files)
 
 # Install
 
@@ -44,12 +44,13 @@ Binaries in the Release area (linux ia32/x86_64/arm7, Win32) as soon as stable e
 
 ```
 # Linux, detect serial device, test communications 
+# Linux tries /dev/ttyACM0 and /dev/ttyUSB0 (in that order)
 $ ./impload test
 2018/05/24 18:08:11 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
 Waypoints: 0 of 60, valid 0
 
-# Linux, detect serial device, qpc /apm mission file
+# Linux, detect serial device and upload a qpc /apm mission file
 $ ./impload upload samples/qpc_0.txt 
 2018/05/24 18:09:10 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
@@ -59,7 +60,7 @@ Waypoints: 12 of 60, valid 1
 
 #
 # Convert a GPX file for tracks (trkpt) to waypoints, and upload  
-# Converted GPX output piped into impload
+# The converted GPX output is piped into impload
 $ gpsbabel -i gpx -f samples/qpc_1_trk.gpx -x transform,wpt=trk -o gpx -F-  | ./impload store -
 2018/05/24 18:34:49 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
@@ -71,7 +72,7 @@ Waypoints: 11 of 60, valid 1
 ```
 
 ```
-> REM  Windows, needs a named device
+> REM  Windows, needs a named device to be given
 > impload -d COM17 upload qpc_0.txt
 ```
 
