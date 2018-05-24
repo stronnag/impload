@@ -75,3 +75,6 @@ Waypoints: 11 of 60, valid 1
 > impload -d COM17 upload qpc_0.txt
 ```
 
+# Postscript
+
+The author knows how to spell "implode".
