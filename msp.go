@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
-	//	"time"
 )
 
 const (
@@ -26,6 +25,14 @@ const (
 
 	wp_WAYPOINT = 1
 	wp_RTH      = 4
+
+	state_INIT = iota
+	state_M
+	state_DIRN
+	state_LEN
+	state_CMD
+	state_DATA
+	state_CRC
 )
 
 type MSPSerial struct {
@@ -64,52 +71,52 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 	done := false
 	var buf []byte
 
-	n := 0
+	n := state_INIT
 
 	for !done {
 		_, err := m.p.Read(inp)
 		if err == nil {
 			switch n {
-			case 0:
+			case state_INIT:
 				if inp[0] == '$' {
-					n = 1
+					n = state_M
 				}
-			case 1:
+			case state_M:
 				if inp[0] == 'M' {
-					n = 2
+					n = state_DIRN
 				} else {
-					n = 0
+					n = state_INIT
 				}
-			case 2:
+			case state_DIRN:
 				if inp[0] == '!' {
-					n = 3
+					n = state_LEN
 					ok = false
 				} else if inp[0] == '>' {
-					n = 3
+					n = state_LEN
 				} else {
-					n = 3
+					n = state_INIT
 				}
-			case 3:
+			case state_LEN:
 				len = inp[0]
 				buf = make([]byte, len)
 				crc = len
-				n = 4
-			case 4:
+				n = state_CMD
+			case state_CMD:
 				cmd = inp[0]
 				crc ^= cmd
 				if len == 0 {
-					n = 6
+					n = state_CRC
 				} else {
-					n = 5
+					n = state_DATA
 				}
-			case 5:
+			case state_DATA:
 				buf[count] = inp[0]
 				crc ^= inp[0]
 				count++
 				if count == len {
-					n = 6
+					n = state_CRC
 				}
-			case 6:
+			case state_CRC:
 				ccrc := inp[0]
 				if crc != ccrc {
 					ok = false
@@ -125,43 +132,6 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 	}
 }
 
-/*
-func (m *MSPSerial)Read0msp() (byte, []byte, error) {
-	buf := make([]byte, 3)
-	n,err := m.p.Read(buf)
-	if err != nil {
-		return 0,nil,err
-	}
-	if n != 3 || buf[0] != '$' || buf[1] != 'M' {
-		m.p.Flush()
-		return 0,nil,errors.New("MSP signature failure")
-	}
-	if buf[2] == '!' {
-		m.p.Flush()
-		return 0,nil,errors.New("MSP direction error")
-	}
-	crc := byte(0)
-	buf = make([]byte, 2)
-	_,err = m.p.Read(buf)
-	if err != nil {
-		return 0,nil,err
-	}
-	len := buf[0]
-	cmd := buf[1]
-	crc ^= len
-	crc ^= cmd
-	buf = make([]byte, len + 1)
-	_,err = m.p.Read(buf)
-	for j := 0; j < int(len); j++ {
-		crc ^= buf[j]
-	}
-	if crc != buf[len] {
-		return 0,nil,errors.New("MSP CRC failure")
-	}
-	return cmd,buf[:len],nil
-}
-*/
-
 func NewMSPSerial(name string, baud int) *MSPSerial {
 	c := &serial.Config{Name: name, Baud: baud}
 	p, err := serial.OpenPort(c)
@@ -174,7 +144,6 @@ func NewMSPSerial(name string, baud int) *MSPSerial {
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 	buf := encode_msp(cmd, payload)
 	m.p.Write(buf)
-	//	time.Sleep(time.Millisecond * 20)
 }
 
 func MSPInit(devnam string, baud int) *MSPSerial {

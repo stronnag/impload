@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -31,6 +30,31 @@ type Mission struct {
 	XMLName      xml.Name      `xml:"MISSION"̀`
 	Version      Version       `xml:"VERSION"̀`
 	MissionItems []MissionItem `xml:"MISSIONITEM"̀`
+}
+
+type WPItem struct {
+	Lat  float64 `xml:"lat,attr"`
+	Lon  float64 `xml:"lon,attr"`
+	Alt  float32   `xml:"ele"`
+	Name string  `xml:"name"`
+}
+
+type GPX struct {
+	XMLName xml.Name `xml:"gpx"̀`
+	WPItems []WPItem `xml:"wpt"̀`
+}
+
+func read_GPX(dat []byte) (*Mission) {
+	var g GPX
+	xml.Unmarshal(dat, &g)
+	items := []MissionItem{}
+	version := Version{Value: "wpconv 0.1"}
+	mission := &Mission{Version: version, MissionItems: items}
+	for k,v := range g.WPItems {
+		item := MissionItem{No: k+1, Lat: v.Lat, Lon: v.Lon, Alt: int32(v.Alt), Action: "WAYPOINT"}
+    mission.MissionItems = append(mission.MissionItems, item)
+	}
+	return mission
 }
 
 func (m *Mission) Dump(path string) {
@@ -96,30 +120,6 @@ func read_XML_mission(dat []byte) *Mission {
 	return &mission
 }
 
-func openStdinOrFile(path string) (io.ReadCloser, error) {
-	var err error
-	var r io.ReadCloser
-
-	if len(path) == 0 || path == "-" {
-		r = os.Stdin
-	} else {
-		r, err = os.Open(path)
-	}
-	return r, err
-}
-
-func openStdoutOrFile(path string) (io.WriteCloser, error) {
-	var err error
-	var w io.WriteCloser
-
-	if len(path) == 0 || path == "-" {
-		w = os.Stdout
-	} else {
-		w, err = os.Create(path)
-	}
-	return w, err
-}
-
 func Read_Mission_File(path string) (*Mission, error) {
 	var dat []byte
 	r, err := openStdinOrFile(path)
@@ -133,9 +133,12 @@ func Read_Mission_File(path string) (*Mission, error) {
 		var m *Mission
 		switch {
 		case bytes.HasPrefix(dat, []byte("<?xml")):
-			if bytes.Contains(dat, []byte("MISSIONITEM")) {
+			switch {
+			case bytes.Contains(dat, []byte("MISSIONITEM")):
 				m = read_XML_mission(dat)
-			} else {
+			case bytes.Contains(dat, []byte("<wpt lat=")):
+				m = read_GPX(dat)
+			default:
 				m = nil
 			}
 		case bytes.HasPrefix(dat, []byte("QGC WPL")):

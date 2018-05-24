@@ -8,8 +8,12 @@ import (
 )
 
 var (
-	device = flag.String("d", "", "Serial Device")
+	defalt = flag.Int("a", 20, "Default altitude (m)")
 	baud   = flag.Int("b", 115200, "Baud rate")
+	device = flag.String("d", "", "Serial Device")
+	defspeed = flag.Int("s", 0, "Default speed (m/s)")
+	force_rtl = flag.Bool("force-rth", false, "Adds RTH for 'external' formats")
+	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
 )
 
 
@@ -83,7 +87,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s [options] command [files ...]\n", os.Args[0])
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "  command\n\tAction required (upload|download|store|restore|convert)\n")
+		fmt.Fprintf(os.Stderr, "  command\n\tAction required (upload|download|store|restore|convert|test)\n")
 	}
 
 	flag.Parse()
