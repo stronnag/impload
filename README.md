@@ -38,7 +38,7 @@ Usage of ./impload [options] command [files ...]
 
 From source: `go get github.com/stronnag/impload`
 
-Binaries in the Release area (linux ia32/x86_64/arm7, Win32)
+Binaries in the Release area (linux ia32/x86_64/arm7, Win32) as soon as stable enough
 
 # Examples
 

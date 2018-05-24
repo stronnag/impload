@@ -11,11 +11,10 @@ var (
 	defalt = flag.Int("a", 20, "Default altitude (m)")
 	baud   = flag.Int("b", 115200, "Baud rate")
 	device = flag.String("d", "", "Serial Device")
-	defspeed = flag.Int("s", 0, "Default speed (m/s)")
+	defspeed = flag.Float64("s", 0, "Default speed (m/s)")
 	force_rtl = flag.Bool("force-rth", false, "Adds RTH for 'external' formats")
 	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
 )
-
 
 func do_test() {
 	devname := check_device()
@@ -23,19 +22,37 @@ func do_test() {
 }
 
 func do_convert(inf string, outf string) {
-	m, err := Read_Mission_File(inf)
+	mtype,m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
+		sanitise_mission(m,mtype)
 		m.Dump(outf)
 	} else {
 		log.Fatal("Invalid input file\n")
 	}
 }
 
+func sanitise_mission(m *Mission, mtype string) {
+	for j,mi := range m.MissionItems {
+		if mi.Action == "WAYPOINT" {
+			if *defspeed != 0.0 &&  mi.P1 == 0 {
+				m.MissionItems[j].P1 = int16 (*defspeed * 100)
+			}
+			if mi.Alt == 0 {
+				m.MissionItems[j].Alt = int32(*defalt)
+			}
+		}
+	}
+	if mtype == "gpx" && (*force_rtl || *force_land) {
+		m.Add_rtl(*force_land)
+	}
+}
+
 func do_upload(inf string, eeprom bool) {
 	devname := check_device()
 	s := MSPInit(devname, *baud)
-	m, err := Read_Mission_File(inf)
+	mtype, m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
+		sanitise_mission(m,mtype)
 		s.upload(m, eeprom)
 	} else {
 		log.Fatal("Invalid input file\n")

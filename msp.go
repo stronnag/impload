@@ -227,7 +227,7 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	binary.LittleEndian.PutUint32(buf[2:6], uint32(v))
 	v = int32(mi.Lon * 1e7)
 	binary.LittleEndian.PutUint32(buf[6:10], uint32(v))
-	binary.LittleEndian.PutUint32(buf[10:14], uint32(mi.Alt))
+	binary.LittleEndian.PutUint32(buf[10:14], uint32(100*mi.Alt))
 	binary.LittleEndian.PutUint16(buf[14:16], uint16(mi.P1))
 	binary.LittleEndian.PutUint16(buf[16:18], uint16(mi.P2))
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(mi.P3))
@@ -284,7 +284,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	lat = float64(v) / 1e7
 	v = int32(binary.LittleEndian.Uint32(b[6:10]))
 	lon = float64(v) / 1e7
-	alt = int32(binary.LittleEndian.Uint32(b[10:14]))
+	alt = int32(binary.LittleEndian.Uint32(b[10:14]))/100
 	p1 = int16(binary.LittleEndian.Uint16(b[14:16]))
 	last := (b[20] == 0xa5)
 	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1}

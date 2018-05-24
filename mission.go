@@ -57,6 +57,16 @@ func read_GPX(dat []byte) (*Mission) {
 	return mission
 }
 
+func (m *Mission) Add_rtl(land bool) {
+	k := len(m.MissionItems)
+	p1 := int16(0)
+	if land {
+		p1 = 1
+	}
+	item := MissionItem{No: k+1, Lat: 0.0, Lon: 0.0, Alt: 0, Action: "RTH", P1: p1}
+  m.MissionItems = append(m.MissionItems, item)
+}
+
 func (m *Mission) Dump(path string) {
 	s, err := xml.MarshalIndent(m, "", "  ")
 	w, err := openStdoutOrFile(path)
@@ -120,15 +130,16 @@ func read_XML_mission(dat []byte) *Mission {
 	return &mission
 }
 
-func Read_Mission_File(path string) (*Mission, error) {
+func Read_Mission_File(path string) (string, *Mission, error) {
 	var dat []byte
+	mtype := ""
 	r, err := openStdinOrFile(path)
 	if err == nil {
 		defer r.Close()
 		dat, err = ioutil.ReadAll(r)
 	}
 	if err != nil {
-		return nil, err
+		return mtype,nil, err
 	} else {
 		var m *Mission
 		switch {
@@ -136,16 +147,19 @@ func Read_Mission_File(path string) (*Mission, error) {
 			switch {
 			case bytes.Contains(dat, []byte("MISSIONITEM")):
 				m = read_XML_mission(dat)
+				mtype = "mwx"
 			case bytes.Contains(dat, []byte("<wpt lat=")):
 				m = read_GPX(dat)
+				mtype = "gpx"
 			default:
 				m = nil
 			}
 		case bytes.HasPrefix(dat, []byte("QGC WPL")):
 			m = read_QML(dat)
+			mtype = "qml"
 		default:
 			m = nil
 		}
-		return m, nil
+		return mtype, m, nil
 	}
 }

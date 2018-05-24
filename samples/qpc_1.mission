@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <MISSION>
   <VERSION value="inept 0.0"></VERSION>
   <MISSIONITEM no="1" action="WAYPOINT" lat="50.9106642" lon="-1.5343979" alt="20" parameter1="0" parameter2="0" parameter3="0"></MISSIONITEM>
