@@ -254,7 +254,8 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 
 	var last bool
 	z := make([]byte, 1)
-	version := Version{Value: "inept 0.0"}
+	s := fmt.Sprintf("impload v%s", VERSION)
+	version := Version{Value: s}
 	items := []MissionItem{}
 	mission := &Mission{Version: version, MissionItems: items}
 	for z[0] = 1; !last; z[0]++ {
