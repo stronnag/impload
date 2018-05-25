@@ -106,7 +106,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage of %s [options] command [files ...]\n", os.Args[0])
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "  command\n\tAction required (upload|download|store|restore|convert|test)\n")
-		fmt.Fprintf(os.Stderr, "\nv%s commit %s\n", VERSION, RELINFO)
+		fmt.Fprintf(os.Stderr, "\nimpload v%s commit %s\n", VERSION, RELINFO)
 	}
 
 	flag.Parse()
