@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
+	"os"
 )
 
 const (
@@ -154,7 +155,7 @@ func MSPInit(devnam string, baud int) *MSPSerial {
 	m.Send_msp(msp_API_VERSION, nil)
 	_, payload, err := m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		api = fmt.Sprintf("%d.%d", payload[1], payload[2])
 	}
@@ -162,7 +163,7 @@ func MSPInit(devnam string, baud int) *MSPSerial {
 	m.Send_msp(msp_FC_VARIANT, nil)
 	_, payload, err = m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		fw = string(payload[0:4])
 	}
@@ -170,7 +171,7 @@ func MSPInit(devnam string, baud int) *MSPSerial {
 	m.Send_msp(msp_FC_VERSION, nil)
 	_, payload, err = m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		vers = fmt.Sprintf("%d.%d.%d", payload[0], payload[1], payload[2])
 	}
@@ -178,7 +179,7 @@ func MSPInit(devnam string, baud int) *MSPSerial {
 	m.Send_msp(msp_BUILD_INFO, nil)
 	_, payload, err = m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		gitrev = string(payload[19:])
 	}
@@ -186,31 +187,31 @@ func MSPInit(devnam string, baud int) *MSPSerial {
 	m.Send_msp(msp_BOARD_INFO, nil)
 	_, payload, err = m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		board = string(payload[9:])
 	}
 
-	fmt.Printf("%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
+	fmt.Fprintf(os.Stderr, "%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
 
 	m.Send_msp(msp_NAME, nil)
 	_, payload, err = m.Read_msp()
 
 	if len(payload) > 0 {
-		fmt.Printf(" \"%s\"\n", payload)
+		fmt.Fprintf(os.Stderr, " \"%s\"\n", payload)
 	} else {
-		fmt.Println("")
+		fmt.Fprintln(os.Stderr, "")
 	}
 
 	m.Send_msp(msp_WP_GETINFO, nil)
 	_, payload, err = m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		wp_max := payload[1]
 		wp_valid := payload[2]
 		wp_count := payload[3]
-		fmt.Printf("Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	}
 	return m
 }
@@ -246,9 +247,9 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 		m.Send_msp(msp_WP_MISSION_LOAD, z)
 		_, _, err := m.Read_msp()
 		if err != nil {
-			fmt.Printf("failed to restore mission: %s\n", err)
+			fmt.Fprintf(os.Stderr, "failed to restore mission: %s\n", err)
 		} else {
-			fmt.Printf("Restored mission\n")
+			fmt.Fprintf(os.Stderr, "Restored mission\n")
 		}
 	}
 
@@ -294,14 +295,14 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 
 func (m *MSPSerial) upload(ms *Mission, eeprom bool) {
 	mlen := len(ms.MissionItems)
-	fmt.Printf("upload %d, save %v\n", mlen, eeprom)
+	fmt.Fprintf(os.Stderr, "upload %d, save %v\n", mlen, eeprom)
 	for i, v := range ms.MissionItems {
-		fmt.Printf("Upload %d\r", i)
+		fmt.Fprintf(os.Stderr, "Upload %d\r", i)
 		_, b := serialise_wp(v, (i == mlen-1))
 		m.Send_msp(msp_SET_WP, b)
 		_, _, err := m.Read_msp()
 		if err != nil {
-			fmt.Printf("for wp %d, %s\n", i, err)
+			fmt.Fprintf(os.Stderr, "for wp %d, %s\n", i, err)
 		}
 	}
 
@@ -311,19 +312,19 @@ func (m *MSPSerial) upload(ms *Mission, eeprom bool) {
 		m.Send_msp(msp_WP_MISSION_SAVE, z)
 		_, _, err := m.Read_msp()
 		if err != nil {
-			fmt.Printf("failed to save mission: %s\n", err)
+			fmt.Fprintf(os.Stderr, "failed to save mission: %s\n", err)
 		} else {
-			fmt.Printf("Saved mission\n")
+			fmt.Fprintf(os.Stderr, "Saved mission\n")
 		}
 	}
 	m.Send_msp(msp_WP_GETINFO, nil)
 	_, payload, err := m.Read_msp()
 	if err != nil {
-		fmt.Println("read: ", err)
+		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
 		wp_max := payload[1]
 		wp_valid := payload[2]
 		wp_count := payload[3]
-		fmt.Printf("Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	}
 }
