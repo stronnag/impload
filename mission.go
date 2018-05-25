@@ -72,9 +72,77 @@ func (m *Mission) Dump(path string) {
 	w, err := openStdoutOrFile(path)
 	if err == nil {
 		defer w.Close()
-		w.Write([]byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"))
+		w.Write([]byte("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"))
 		fmt.Fprintf(w, "%s\n", string(s))
 	}
+}
+
+
+func read_Simple(dat []byte) (*Mission) {
+	r := csv.NewReader(strings.NewReader(string(dat)))
+
+	items := []MissionItem{}
+	version := Version{Value: "wpconv 0.1"}
+
+	mission := &Mission{Version: version, MissionItems: items}
+
+	n := 1
+	has_no := false
+
+	for  {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if record[0] == "no" {
+			has_no = true
+			continue
+		}
+
+		if record[0] == "wp" {
+			continue
+		}
+
+		var lat, lon float64
+
+		j := 0
+		no := n
+		if has_no {
+			no,_ = strconv.Atoi(record[0])
+			j = 1
+		}
+
+		alt,_:=  strconv.ParseFloat(record[j+3],64)
+		fp1,_:=  strconv.ParseFloat(record[j+4],64)
+		p1 :=  int16(0)
+		action := record[j]
+		switch action {
+		case "RTH":
+			lat = 0.0
+			lon = 0.0
+			alt = 0
+			if fp1 != 0 {
+				p1 = 1
+			}
+		case "WAYPOINT","WP":
+			action = "WAYPOINT"
+			lat,_ =  strconv.ParseFloat(record[j+1],64)
+			lon,_ =  strconv.ParseFloat(record[j+2],64)
+			if fp1 > 0 {
+				p1 = int16(fp1 * 100)
+			}
+		default:
+			continue
+		}
+		item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1:  p1}
+		mission.MissionItems = append(mission.MissionItems, item)
+		n++
+	}
+	return mission
 }
 
 func read_QML(dat []byte) *Mission {
@@ -157,6 +225,10 @@ func Read_Mission_File(path string) (string, *Mission, error) {
 		case bytes.HasPrefix(dat, []byte("QGC WPL")):
 			m = read_QML(dat)
 			mtype = "qml"
+		case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
+			bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
+			m = read_Simple(dat)
+			mtype = "csv"
 		default:
 			m = nil
 		}

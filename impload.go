@@ -14,6 +14,7 @@ var (
 	defspeed = flag.Float64("s", 0, "Default speed (m/s)")
 	force_rtl = flag.Bool("force-rth", false, "Adds RTH for 'external' formats")
 	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
+	show_vers =  flag.Bool("v", false, "Shows version")
 )
 
 func do_test() {
@@ -103,11 +104,18 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s [options] command [files ...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "v%s\n commit %s", VERSION, RELINFO)
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stderr, "  command\n\tAction required (upload|download|store|restore|convert|test)\n")
 	}
 
 	flag.Parse()
+
+	if *show_vers {
+		fmt.Fprintf(os.Stderr, "%s\n", VERSION)
+		os.Exit(0)
+	}
+
 
 	files := flag.Args()
 	if len(files) == 0 {
@@ -117,6 +125,12 @@ func main() {
 	inf, outf := verify_in_out_files(files[1:])
 
 	switch files[0] {
+	case "help":
+		flag.Usage()
+		os.Exit(0)
+	case "version":
+		fmt.Fprintf(os.Stderr, "%s\n", version)
+		os.Exit(0)
 	case "test":
 		do_test()
 	case "upload", "up":
