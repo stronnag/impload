@@ -41,7 +41,7 @@ Usage of ./impload [options] command [files ...]
 
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
 
-Binaries in the Release area (linux ia32/x86_64/arm7, Win32) as soon as stable enough if you don't want it build it locally.
+Binaries in the Release area (linux ia32/x86_64/arm7, Win32) if you don't want it build it locally.
 
 # Examples
 
