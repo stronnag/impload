@@ -2,5 +2,5 @@
 
   const (
 	VERSION = "0.145.324"
-	RELINFO = "b14dfb1 / 2018-05-25"
+	RELINFO = "4b54c7c / 2018-05-25"
 	)

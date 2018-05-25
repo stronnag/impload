@@ -129,7 +129,7 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	case "version":
-		fmt.Fprintf(os.Stderr, "%s\n", version)
+		fmt.Fprintf(os.Stderr, "%s\n", VERSION)
 		os.Exit(0)
 	case "test":
 		do_test()
