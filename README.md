@@ -7,7 +7,8 @@ impload is a cross-platform command line application to upload missions in a num
 
 * MW XML mission files (as used by [mwp](https://github.com/stronnag/mwptools), ezgui, mission planner for inav)
 * apmplanner / qgroundcontrol mission files
-* GPX waypoint files
+* GPX files (tracks, routes, waypoints)
+* KML files
 * Plain, simple CSV files
 
 Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/impload-User-Guide) for more information and CSV format
@@ -35,6 +36,7 @@ Usage of ./impload [options] command [files ...]
 
 * Plan missions in apm / qpc, upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
+* Plan mission in Google Earth, save as KML path, upload to the FC
 * Backup missions made in the configurator (as MW XML mission files)
 
 # Install

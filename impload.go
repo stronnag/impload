@@ -43,7 +43,7 @@ func sanitise_mission(m *Mission, mtype string) {
 			}
 		}
 	}
-	if mtype == "gpx" && (*force_rtl || *force_land) {
+	if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
 		m.Add_rtl(*force_land)
 	}
 }
