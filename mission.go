@@ -53,7 +53,7 @@ func read_KML(dat []byte) *Mission {
 	if src != "" {
 		st := strings.Trim(src, "\n\r\t ")
 		ss := strings.Split(st, " ")
-		n := 0
+		n := 1
 		for _, val := range ss {
 			coords := strings.Split(val, ",")
 			if len(coords) > 1 {
