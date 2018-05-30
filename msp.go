@@ -255,10 +255,9 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 
 	var last bool
 	z := make([]byte, 1)
-	s := fmt.Sprintf("impload v%s", VERSION)
-	version := Version{Value: s}
+	s := GetVersion()
 	items := []MissionItem{}
-	mission := &Mission{Version: version, MissionItems: items}
+	mission := &Mission{s, items}
 	for z[0] = 1; !last; z[0]++ {
 		m.Send_msp(msp_WP, z)
 		_, payload, err := m.Read_msp()

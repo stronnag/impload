@@ -17,6 +17,10 @@ var (
 	show_vers =  flag.Bool("v", false, "Shows version")
 )
 
+func GetVersion() string {
+	return fmt.Sprintf("impload v%s", VERSION)
+}
+
 func do_test() {
 	devname := check_device()
 	MSPInit(devname, *baud)

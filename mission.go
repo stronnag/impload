@@ -3,73 +3,60 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
-	"github.com/antchfx/xmlquery"
+	"time"
+  "github.com/beevik/etree"
 )
 
-type Version struct {
-	Value string `xml:"value,attr"`
-}
 type MissionItem struct {
-	No     int     `xml:"no,attr"`
-	Action string  `xml:"action,attr"`
-	Lat    float64 `xml:"lat,attr"`
-	Lon    float64 `xml:"lon,attr"`
-	Alt    int32   `xml:"alt,attr"`
-	P1     int16   `xml:"parameter1,attr"`
-	P2     uint16  `xml:"parameter2,attr"`
-	P3     uint16  `xml:"parameter3,attr"`
+	No     int
+	Action string
+	Lat    float64
+	Lon    float64
+	Alt    int32
+	P1     int16
+	P2     uint16
+	P3     uint16
 }
 
 type Mission struct {
-	XMLName      xml.Name      `xml:"MISSION"̀`
-	Version      Version       `xml:"VERSION"̀`
-	MissionItems []MissionItem `xml:"MISSIONITEM"̀`
+	Version      string
+	MissionItems []MissionItem
 }
 
 func read_KML(dat []byte) *Mission {
-	src := ""
-	doc, err := xmlquery.Parse(strings.NewReader(string(dat)))
-  if err == nil {
-    coords := xmlquery.FindOne(doc, "//Placemark/LineString/coordinates")
-    if coords == nil {
-      coords = xmlquery.FindOne(doc, "//kml:Placemark/kml:LineString/kml:coordinates")
-    }
-    if coords != nil {
-      src = coords.InnerText()
-    }
-	}
 
 	items := []MissionItem{}
-	version := Version{Value: "wpconv 0.1"}
-	mission := &Mission{Version: version, MissionItems: items}
+	mission := &Mission{GetVersion(), items}
 
-	if src != "" {
-		st := strings.Trim(src, "\n\r\t ")
-		ss := strings.Split(st, " ")
-		n := 1
-		for _, val := range ss {
-			coords := strings.Split(val, ",")
-			if len(coords) > 1 {
-				for i, c := range coords {
-					coords[i] = strings.Trim(c, "\n\r\t ")
+  doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(dat); err == nil {
+		root := doc.SelectElement("kml")
+		if src := root.FindElement("//Placemark/LineString/coordinates"); src != nil {
+			st := strings.Trim(src.Text(), "\n\r\t ")
+			ss := strings.Split(st, " ")
+			n := 1
+			for _, val := range ss {
+				coords := strings.Split(val, ",")
+				if len(coords) > 1 {
+					for i, c := range coords {
+						coords[i] = strings.Trim(c, "\n\r\t ")
+					}
+					alt := 0.0
+					lon, _ := strconv.ParseFloat(coords[0], 64)
+					lat, _ := strconv.ParseFloat(coords[1], 64)
+					if len(coords) > 2 {
+						alt, _ = strconv.ParseFloat(coords[2], 64)
+					}
+					item := MissionItem{No: n, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
+					n++
+					mission.MissionItems = append(mission.MissionItems, item)
 				}
-
-				alt := 0.0
-				lon, _ := strconv.ParseFloat(coords[0], 64)
-				lat, _ := strconv.ParseFloat(coords[1], 64)
-				if len(coords) > 2 {
-					alt, _ = strconv.ParseFloat(coords[2], 64)
-				}
-				item := MissionItem{No: n, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
-				n++
-				mission.MissionItems = append(mission.MissionItems, item)
 			}
 		}
 	}
@@ -78,29 +65,24 @@ func read_KML(dat []byte) *Mission {
 
 func read_GPX(dat []byte) *Mission {
 	items := []MissionItem{}
-	version := Version{Value: "wpconv 0.1"}
-	mission := &Mission{Version: version, MissionItems: items}
-
-	doc, err := xmlquery.Parse(strings.NewReader(string(dat)))
+	mission := &Mission{GetVersion(), items}
 	stypes := []string{"//trkpt", "//rtept", "//wpt"}
 
-	if err == nil {
+  doc := etree.NewDocument()
+  if err := doc.ReadFromBytes(dat); err == nil {
+		root := doc.SelectElement("gpx")
 		for _,stype:= range stypes {
-			list  := xmlquery.Find(doc, stype)
-			if list != nil {
-				for k, node := range list {
-					alt := 0.0
-					lat,_ := strconv.ParseFloat(node.SelectAttr("lat"), 64)
-					lon,_ := strconv.ParseFloat(node.SelectAttr("lon"), 64)
-					enode := xmlquery.FindOne(node, "ele")
-					if enode != nil {
-						alt,_ = strconv.ParseFloat(enode.InnerText(), 64)
-					}
-					item := MissionItem{No: k + 1, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
-					mission.MissionItems = append(mission.MissionItems, item)
-				}
-				break
+			for k, pts := range root.FindElements(stype) {
+				alt := 0.0
+				lat,_ := strconv.ParseFloat(pts.SelectAttrValue("lat","0"), 64)
+				lon,_ := strconv.ParseFloat(pts.SelectAttrValue("lon","0"), 64)
+				if anode := pts.SelectElement("ele"); anode != nil {
+					alt,_ = strconv.ParseFloat(anode.Text(), 64)
+        }
+				item := MissionItem{No: k + 1, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
+				mission.MissionItems = append(mission.MissionItems, item)
 			}
+			break
 		}
 	}
 	return mission
@@ -117,13 +99,28 @@ func (m *Mission) Add_rtl(land bool) {
 }
 
 func (m *Mission) Dump(path string) {
-	s, err := xml.MarshalIndent(m, "", "  ")
+	t := time.Now()
+	doc := etree.NewDocument()
+	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
+	x := doc.CreateElement("MISSION")
+	x.CreateComment(fmt.Sprintf("Created by \"impload\" v%s on %s\n      <https://github.com/stronnag/impload>\n  ",VERSION,t.Format(time.RFC3339)))
+	v := x.CreateElement("VERSION")
+	v.CreateAttr("value", m.Version)
+	for _,mi := range m.MissionItems {
+		xi := x.CreateElement("MISSIONITEM")
+		xi.CreateAttr("no", fmt.Sprintf("%d", mi.No))
+		xi.CreateAttr("action", mi.Action)
+		xi.CreateAttr("lat", strconv.FormatFloat(mi.Lat, 'g', -1, 64))
+		xi.CreateAttr("lon", strconv.FormatFloat(mi.Lon, 'g', -1, 64))
+		xi.CreateAttr("alt", fmt.Sprintf("%d",mi.Alt))
+		xi.CreateAttr("parameter1", fmt.Sprintf("%d", mi.P1))
+		xi.CreateAttr("parameter2", fmt.Sprintf("%d", mi.P2))
+		xi.CreateAttr("parameter3", fmt.Sprintf("%d", mi.P3))
+	}
 	w, err := openStdoutOrFile(path)
 	if err == nil {
-		defer w.Close()
-		//		w.Write([]byte("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"))
-		w.Write([]byte(xml.Header))
-		fmt.Fprintf(w, "%s\n", string(s))
+		doc.Indent(2)
+		doc.WriteTo(w)
 	}
 }
 
@@ -131,9 +128,7 @@ func read_Simple(dat []byte) *Mission {
 	r := csv.NewReader(strings.NewReader(string(dat)))
 
 	items := []MissionItem{}
-	version := Version{Value: "wpconv 0.1"}
-
-	mission := &Mission{Version: version, MissionItems: items}
+	mission := &Mission{GetVersion(), items}
 
 	n := 1
 	has_no := false
@@ -200,9 +195,7 @@ func read_QML(dat []byte) *Mission {
 	r.FieldsPerRecord = -1
 
 	items := []MissionItem{}
-	version := Version{Value: "wpconv 0.1"}
-
-	mission := &Mission{Version: version, MissionItems: items}
+	mission := &Mission{GetVersion(), items}
 
 	for {
 		record, err := r.Read()
@@ -242,9 +235,31 @@ func read_QML(dat []byte) *Mission {
 }
 
 func read_XML_mission(dat []byte) *Mission {
-	var mission Mission
-	xml.Unmarshal(dat, &mission)
-	return &mission
+	items := []MissionItem{}
+	mission := &Mission{"impload", items}
+  doc := etree.NewDocument()
+  if err := doc.ReadFromBytes(dat); err == nil {
+		root := doc.SelectElement("MISSION")
+		if vers := root.SelectElement("VERSION"); vers != nil {
+			version := vers.SelectAttrValue("value","")
+			if version != "" {
+				mission.Version = version
+			}
+		}
+		for _, pts := range root.FindElements("//MISSIONITEM") {
+			no, _ := strconv.Atoi(pts.SelectAttrValue("no","0"))
+			action := pts.SelectAttrValue("action","WAYPOINT")
+			lat,_ := strconv.ParseFloat(pts.SelectAttrValue("lat","0"), 64)
+			lon,_ := strconv.ParseFloat(pts.SelectAttrValue("lon","0"), 64)
+			alt, _ := strconv.Atoi(pts.SelectAttrValue("alt","0"))
+			p1, _ := strconv.Atoi(pts.SelectAttrValue("parameter1","0"))
+			p2, _ := strconv.Atoi(pts.SelectAttrValue("parameter2","0"))
+			p3, _ := strconv.Atoi(pts.SelectAttrValue("parameter3","0"))
+			item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), uint16(p2), uint16(p3)}
+			mission.MissionItems = append(mission.MissionItems, item)
+		}
+	}
+	return mission
 }
 
 func Read_Mission_File(path string) (string, *Mission, error) {

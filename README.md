@@ -41,9 +41,16 @@ Usage of ./impload [options] command [files ...]
 
 # Install
 
+Binaries in the Release area (linux ia32/x86_64/arm7, Win32) if you don't want it build it locally.
+
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
 
-Binaries in the Release area (linux ia32/x86_64/arm7, Win32) if you don't want it build it locally.
+Note: If you clone the repo, then you need to `go get` the dependencies:
+
+```
+go get github.com/tarm/serial
+go get github.com/beevik/etree
+```
 
 # Examples
 
@@ -64,9 +71,8 @@ upload 12, save false
 Waypoints: 12 of 60, valid 1
 
 #
-# Convert a GPX file for tracks (trkpt) to waypoints, and upload
-# The converted GPX output is piped into impload
-$ gpsbabel -i gpx -f samples/qpc_1_trk.gpx -x transform,wpt=trk -o gpx -F-  | ./impload store -
+# Upload / store a GPX file
+$ ./impload store samples/qpc_1_trk.gpx
 2018/05/24 18:34:49 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
 Waypoints: 11 of 60, valid 1
@@ -78,7 +84,7 @@ Waypoints: 11 of 60, valid 1
 
 ```
 > REM  Windows, needs a named device to be given
-> impload -d COM17 upload qpc_0.txt
+> impload -d COM17 upload samples/google-earth-mission.kml
 ```
 
 # Postscript
