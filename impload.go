@@ -50,6 +50,9 @@ func sanitise_mission(m *Mission, mtype string) {
 	if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
 		m.Add_rtl(*force_land)
 	}
+	if mlen := len(m.MissionItems) ; mlen > 60 {
+		log.Fatal(fmt.Sprintf("Mission has too many (%d) waypoints\n", mlen))
+	}
 }
 
 func do_upload(inf string, eeprom bool) {

@@ -277,7 +277,7 @@ func Read_Mission_File(path string) (string, *Mission, error) {
 		switch {
 		case bytes.HasPrefix(dat, []byte("<?xml")):
 			switch {
-			case bytes.Contains(dat, []byte("MISSIONITEM")):
+			case bytes.Contains(dat, []byte("<MISSION")):
 				m = read_XML_mission(dat)
 				mtype = "mwx"
 			case bytes.Contains(dat, []byte("<gpx ")):
