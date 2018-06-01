@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
   "github.com/beevik/etree"
+	"archive/zip"
 )
 
 type MissionItem struct {
@@ -262,43 +263,73 @@ func read_XML_mission(dat []byte) *Mission {
 	return mission
 }
 
+func ReadKMZ(path string) (string, *Mission) {
+	r, err := zip.OpenReader(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+	for _, f := range r.File {
+		rc, err := f.Open()
+		defer rc.Close()
+		if err == nil {
+			dat, err := ioutil.ReadAll(rc)
+			if err == nil {
+				mtype, m := handle_mission_data(dat, path)
+				if m != nil {
+					return mtype,m
+				}
+			}
+		}
+	}
+	return "",nil
+}
+
 func Read_Mission_File(path string) (string, *Mission, error) {
 	var dat []byte
-	mtype := ""
 	r, err := openStdinOrFile(path)
 	if err == nil {
 		defer r.Close()
 		dat, err = ioutil.ReadAll(r)
 	}
 	if err != nil {
-		return mtype, nil, err
+		return "?", nil, err
 	} else {
-		var m *Mission
+		mtype, m := handle_mission_data(dat, path)
+		return mtype, m, nil
+	}
+}
+
+func handle_mission_data(dat []byte, path string) (string, *Mission) {
+	var m *Mission
+	mtype := ""
+	switch {
+	case bytes.HasPrefix(dat, []byte("<?xml")):
 		switch {
-		case bytes.HasPrefix(dat, []byte("<?xml")):
-			switch {
-			case bytes.Contains(dat, []byte("<MISSION")):
-				m = read_XML_mission(dat)
-				mtype = "mwx"
-			case bytes.Contains(dat, []byte("<gpx ")):
-				m = read_GPX(dat)
-				mtype = "gpx"
-			case bytes.Contains(dat, []byte("<kml ")):
-				m = read_KML(dat)
-				mtype = "kml"
-			default:
-				m = nil
-			}
-		case bytes.HasPrefix(dat, []byte("QGC WPL")):
-			m = read_QML(dat)
-			mtype = "qml"
-		case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
-			bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
-			m = read_Simple(dat)
-			mtype = "csv"
+		case bytes.Contains(dat, []byte("<MISSION")):
+			m = read_XML_mission(dat)
+			mtype = "mwx"
+		case bytes.Contains(dat, []byte("<gpx ")):
+			m = read_GPX(dat)
+			mtype = "gpx"
+		case bytes.Contains(dat, []byte("<kml ")):
+			m = read_KML(dat)
+			mtype = "kml"
 		default:
 			m = nil
 		}
-		return mtype, m, nil
+	case bytes.HasPrefix(dat, []byte("QGC WPL")):
+		m = read_QML(dat)
+		mtype = "qml"
+	case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
+		bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
+		m = read_Simple(dat)
+		mtype = "csv"
+	case bytes.HasPrefix(dat,[]byte("PK\003\004")):
+		fmt.Printf("KMZ %s\n", path)
+		mtype, m = ReadKMZ(path)
+	default:
+		m = nil
 	}
+	return mtype,m
 }
