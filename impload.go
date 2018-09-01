@@ -150,5 +150,7 @@ func main() {
 		do_upload(inf, true)
 	case "restore", "rest":
 		do_download(inf, true)
+	default:
+		fmt.Fprintf(os.Stderr, "impload: unrecognised command \"%s\"\n", files[0])
 	}
 }
