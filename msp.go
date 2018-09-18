@@ -7,6 +7,7 @@ import (
 	"github.com/tarm/serial"
 	"log"
 	"os"
+	"net"
 )
 
 const (
@@ -37,7 +38,9 @@ const (
 )
 
 type MSPSerial struct {
+	klass int
 	p *serial.Port
+	conn net.Conn
 }
 
 func encode_msp(cmd byte, payload []byte) []byte {
@@ -62,6 +65,22 @@ func encode_msp(cmd byte, payload []byte) []byte {
 	return buf
 }
 
+func (m *MSPSerial) read(inp []byte) (int, error) {
+	if m.klass == DevClass_SERIAL {
+		return m.p.Read(inp)
+	} else {
+		return m.conn.Read(inp)
+	}
+}
+
+func (m *MSPSerial) write(payload []byte) (int, error) {
+	if m.klass == DevClass_SERIAL {
+		return m.p.Write(payload)
+	} else {
+		return m.conn.Write(payload)
+	}
+}
+
 func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 	inp := make([]byte, 1)
 	var count = byte(0)
@@ -75,7 +94,7 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 	n := state_INIT
 
 	for !done {
-		_, err := m.p.Read(inp)
+		_, err := m.read(inp)
 		if err == nil {
 			switch n {
 			case state_INIT:
@@ -133,24 +152,45 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 	}
 }
 
-func NewMSPSerial(name string, baud int) *MSPSerial {
-	c := &serial.Config{Name: name, Baud: baud}
+func NewMSPSerial(dd DevDescription) *MSPSerial {
+	c := &serial.Config{Name: dd.name, Baud: dd.param}
 	p, err := serial.OpenPort(c)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &MSPSerial{p}
+	return &MSPSerial{klass: dd.klass, p: p}
+}
+
+func NewMSPTCP(dd DevDescription) *MSPSerial {
+	var conn net.Conn
+	remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
+	addr, err := net.ResolveTCPAddr("tcp", remote)
+	if err == nil {
+    conn, err = net.DialTCP("tcp", nil, addr)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &MSPSerial{klass: dd.klass, conn: conn}
 }
 
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 	buf := encode_msp(cmd, payload)
-	m.p.Write(buf)
+	m.write(buf)
 }
 
-func MSPInit(devnam string, baud int) *MSPSerial {
+func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
-
-	m := NewMSPSerial(devnam, baud)
+	var m *MSPSerial
+	if dd.klass == DevClass_SERIAL {
+		m = NewMSPSerial(dd)
+	} else if dd.klass == DevClass_TCP {
+		m = NewMSPTCP(dd)
+	} else {
+		fmt.Fprintln(os.Stderr, "Unsupported device")
+		os.Exit(1)
+	}
 
 	m.Send_msp(msp_API_VERSION, nil)
 	_, payload, err := m.Read_msp()

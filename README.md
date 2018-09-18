@@ -11,6 +11,8 @@ impload - iNav Mission Plan uploader
 * KML, KMZ files
 * Plain, simple CSV files
 
+Serial devices and TCP are supported
+
 Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/impload-User-Guide) for more information and CSV format
 
 ```
@@ -21,7 +23,7 @@ Usage of ./impload [options] command [files ...]
   -b int
     	Baud rate (default 115200)
   -d string
-    	Serial Device
+    	Device name
   -force-land
     	Adds RTH / Land for 'external' formats
   -force-rth
@@ -31,6 +33,27 @@ Usage of ./impload [options] command [files ...]
   command
 	Action required (upload|download|store|restore|convert|test)
 ```
+
+## Device Name
+
+impload supports a subset of the mwp device naming scheme:
+
+* serial_device[@baudrate]
+* tcp://host:port
+
+The baud rate given as an extended device name is preferred to -b
+
+### Device name examples:
+
+```
+/dev/ttyUSB0@57600
+/dev/ttyACM0
+COM17@115200
+tcp://esp8266:23
+```
+
+UDP connections (e.g. ESP8266) are not currently supported.
+
 
 # Use Cases
 
@@ -80,9 +103,21 @@ upload 11, save true
 Saved mission
 Waypoints: 11 of 60, valid 1
 
-```
+# TCP ...
+#
+$ impload  -d tcp://localhost:4321 upload samples/qpc_1.mission
+2018/09/18 18:57:08 Using device localhost 4321
+INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
+Waypoints: 0 of 60, valid 0
+upload 12, save false
+Waypoints: 12 of 60, valid 1
 
-```
+$ impload  -d tcp://localhost:4321 download /tmp/m.mission
+2018/09/18 19:08:30 Using device localhost 4321
+INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
+Waypoints: 12 of 60, valid 1
+
+
 > REM  Windows, needs a named device to be given
 > impload -d COM17 upload samples/google-earth-mission.kml
 ```

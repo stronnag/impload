@@ -5,7 +5,26 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strings"
+	"strconv"
 )
+
+
+const (
+	DevClass_NONE = iota
+	DevClass_SERIAL
+	DevClass_TCP
+	DevClass_UDP
+)
+
+type DevDescription  struct {
+	klass int
+	name string
+	param int
+	name1 string
+	param1 int
+}
 
 var (
 	defalt = flag.Int("a", 20, "Default altitude (m)")
@@ -22,8 +41,8 @@ func GetVersion() string {
 }
 
 func do_test() {
-	devname := check_device()
-	MSPInit(devname, *baud)
+	devdesc := check_device()
+	MSPInit(devdesc)
 }
 
 func do_convert(inf string, outf string) {
@@ -56,8 +75,8 @@ func sanitise_mission(m *Mission, mtype string) {
 }
 
 func do_upload(inf string, eeprom bool) {
-	devname := check_device()
-	s := MSPInit(devname, *baud)
+	devdesc := check_device()
+	s := MSPInit(devdesc)
 	mtype, m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
 		sanitise_mission(m,mtype)
@@ -68,8 +87,8 @@ func do_upload(inf string, eeprom bool) {
 }
 
 func do_download(outf string, eeprom bool) {
-	devname := check_device()
-	s := MSPInit(devname, *baud)
+	devdesc := check_device()
+	s := MSPInit(devdesc)
 	m := s.download(eeprom)
 	m.Dump(outf)
 }
@@ -89,22 +108,53 @@ func verify_in_out_files(files []string) (string, string) {
 	return inf, outf
 }
 
-func check_device() string {
-	devname := *device
-	if devname == "" {
+func check_device() DevDescription {
+	devdesc := parse_device()
+	if devdesc.name == "" {
 		for _, v := range []string{"/dev/ttyACM0", "/dev/ttyUSB0"} {
 			if _, err := os.Stat(v); err == nil {
-				devname = v
+				devdesc.klass = DevClass_SERIAL
+				devdesc.name = v
+				devdesc.param = *baud
 				break
 			}
 		}
 	}
-	if devname == "" {
+	if devdesc.name == "" {
 		log.Fatalln("No device given\n")
 	} else {
-		log.Printf("Using device %s %d\n", devname, *baud)
+		log.Printf("Using device %s %d\n", devdesc.name, devdesc.param)
 	}
-	return devname
+	return devdesc
+}
+
+
+func parse_device() DevDescription {
+	dd := DevDescription{klass: DevClass_NONE }
+	r := regexp.MustCompile(`^(tcp|udp)://([\[\]:A-Za-z\-\.0-9]*):(\d+)/{0,1}([A-Za-z\-\.0-9]*):{0,1}(\d*)`)
+	m := r.FindAllStringSubmatch(*device,-1)
+	if len(m) > 0 {
+		if m[0][1] == "tcp" {
+			dd.klass = DevClass_TCP
+		} else {
+			dd.klass = DevClass_UDP
+		}
+		dd.name = m[0][2]
+		dd.param,_ = strconv.Atoi(m[0][3])
+		// These are only used for ESP8266 UDP
+		dd.name1 = m[0][4]
+		dd.param1,_ = strconv.Atoi(m[0][5])
+	} else {
+		ss := strings.Split(*device,"@")
+		dd.klass = 	DevClass_SERIAL
+		dd.name = ss[0]
+		if len(ss) > 1 {
+			dd.param,_ = strconv.Atoi(ss[1])
+		} else {
+			dd.param = *baud
+		}
+	}
+	return dd
 }
 
 func main() {
