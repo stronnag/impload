@@ -38,10 +38,14 @@ Usage of ./impload [options] command [files ...]
 
 impload supports a subset of the mwp device naming scheme:
 
-* serial_device[@baudrate]
-* tcp://host:port
+* `serial_device[@baudrate]`
+* `tcp://host:port`
+* `udp://remotehost:remote_port`
+* `udp://local_host:local_port/remote_host:remote_port`
 
 The baud rate given as an extended device name is preferred to -b
+
+For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the latter form is needed.
 
 ### Device name examples:
 
@@ -50,10 +54,9 @@ The baud rate given as an extended device name is preferred to -b
 /dev/ttyACM0
 COM17@115200
 tcp://esp8266:23
+udp://:14014/esp-air:14014  
+# both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
 ```
-
-UDP connections (e.g. ESP8266) are not currently supported.
-
 
 # Use Cases
 
@@ -117,6 +120,17 @@ $ impload  -d tcp://localhost:4321 download /tmp/m.mission
 INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
 Waypoints: 12 of 60, valid 1
 
+# UDP ....
+#
+$ impload -d udp://:14014/esp-air:14014 test
+2018/09/19 21:11:34 Using device udp://:14014/esp-air:14014
+INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
+Waypoints: 12 of 60, valid 1
+
+$ impload -d udp://:14014/esp-air:14014 download /tmp/m.mission
+2018/09/19 21:11:46 Using device udp://:14014/esp-air:14014
+INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
+Waypoints: 12 of 60, valid 1
 
 > REM  Windows, needs a named device to be given
 > impload -d COM17 upload samples/google-earth-mission.kml
