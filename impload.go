@@ -120,14 +120,13 @@ func check_device() DevDescription {
 			}
 		}
 	}
-	if devdesc.name == "" {
+	if devdesc.name == "" && devdesc.param == 0 {
 		log.Fatalln("No device given\n")
 	} else {
-		log.Printf("Using device %s %d\n", devdesc.name, devdesc.param)
+		log.Printf("Using device %s\n", *device)
 	}
 	return devdesc
 }
-
 
 func parse_device() DevDescription {
 	dd := DevDescription{klass: DevClass_NONE }

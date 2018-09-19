@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"net"
+	"bufio"
 )
 
 const (
@@ -41,6 +42,7 @@ type MSPSerial struct {
 	klass int
 	p *serial.Port
 	conn net.Conn
+	reader *bufio.Reader
 }
 
 func encode_msp(cmd byte, payload []byte) []byte {
@@ -68,8 +70,10 @@ func encode_msp(cmd byte, payload []byte) []byte {
 func (m *MSPSerial) read(inp []byte) (int, error) {
 	if m.klass == DevClass_SERIAL {
 		return m.p.Read(inp)
-	} else {
+	} else if m.klass == DevClass_TCP {
 		return m.conn.Read(inp)
+	} else {
+		return m.reader.Read(inp)
 	}
 }
 
@@ -175,6 +179,34 @@ func NewMSPTCP(dd DevDescription) *MSPSerial {
 	return &MSPSerial{klass: dd.klass, conn: conn}
 }
 
+func NewMSPUDP(dd DevDescription) *MSPSerial {
+	var laddr, raddr *net.UDPAddr
+	var reader  *bufio.Reader
+	var conn net.Conn
+	var err error
+
+	if dd.param1 != 0 {
+		raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name1, dd.param1))
+		laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+	} else {
+		if dd.name == "" {
+			laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+		} else {
+			raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+		}
+	}
+	if err == nil {
+		conn,err = net.DialUDP("udp", laddr, raddr)
+		if err == nil {
+		reader = bufio.NewReader(conn)
+		}
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &MSPSerial{klass: dd.klass, conn: conn, reader : reader}
+}
+
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 	buf := encode_msp(cmd, payload)
 	m.write(buf)
@@ -183,11 +215,14 @@ func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
 	var m *MSPSerial
-	if dd.klass == DevClass_SERIAL {
+	switch dd.klass {
+		case DevClass_SERIAL:
 		m = NewMSPSerial(dd)
-	} else if dd.klass == DevClass_TCP {
+	case DevClass_TCP:
 		m = NewMSPTCP(dd)
-	} else {
+	case DevClass_UDP:
+		m = NewMSPUDP(dd)
+   default:
 		fmt.Fprintln(os.Stderr, "Unsupported device")
 		os.Exit(1)
 	}
