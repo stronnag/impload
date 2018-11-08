@@ -51,9 +51,11 @@ func read_KML(dat []byte) *Mission {
 					alt := 0.0
 					lon, _ := strconv.ParseFloat(coords[0], 64)
 					lat, _ := strconv.ParseFloat(coords[1], 64)
+/*
 					if len(coords) > 2 {
 						alt, _ = strconv.ParseFloat(coords[2], 64)
 					}
+*/
 					item := MissionItem{No: n, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
 					n++
 					mission.MissionItems = append(mission.MissionItems, item)
@@ -77,9 +79,11 @@ func read_GPX(dat []byte) *Mission {
 				alt := 0.0
 				lat,_ := strconv.ParseFloat(pts.SelectAttrValue("lat","0"), 64)
 				lon,_ := strconv.ParseFloat(pts.SelectAttrValue("lon","0"), 64)
+/*
 				if anode := pts.SelectElement("ele"); anode != nil {
 					alt,_ = strconv.ParseFloat(anode.Text(), 64)
         }
+*/
 				item := MissionItem{No: k + 1, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
 				mission.MissionItems = append(mission.MissionItems, item)
 			}
