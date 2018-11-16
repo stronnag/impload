@@ -264,7 +264,11 @@ func MSPInit(dd DevDescription) *MSPSerial {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "read: ", err)
 	} else {
-		board = string(payload[9:])
+		if len(payload) > 8 {
+			board = string(payload[9:])
+		} else {
+			board = string(payload[:4])
+		}
 	}
 
 	fmt.Fprintf(os.Stderr, "%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
