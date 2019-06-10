@@ -107,12 +107,12 @@ func (m *Mission) Dump(path string) {
 	t := time.Now()
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
-	x := doc.CreateElement("MISSION")
+	x := doc.CreateElement("mission")
 	x.CreateComment(fmt.Sprintf("Created by \"impload\" v%s on %s\n      <https://github.com/stronnag/impload>\n  ",VERSION,t.Format(time.RFC3339)))
-	v := x.CreateElement("VERSION")
+	v := x.CreateElement("version")
 	v.CreateAttr("value", m.Version)
 	for _,mi := range m.MissionItems {
-		xi := x.CreateElement("MISSIONITEM")
+		xi := x.CreateElement("missionitem")
 		xi.CreateAttr("no", fmt.Sprintf("%d", mi.No))
 		xi.CreateAttr("action", mi.Action)
 		xi.CreateAttr("lat", strconv.FormatFloat(mi.Lat, 'g', -1, 64))
@@ -244,24 +244,31 @@ func read_XML_mission(dat []byte) *Mission {
 	mission := &Mission{"impload", items}
   doc := etree.NewDocument()
   if err := doc.ReadFromBytes(dat); err == nil {
-		root := doc.SelectElement("MISSION")
-		if vers := root.SelectElement("VERSION"); vers != nil {
-			version := vers.SelectAttrValue("value","")
-			if version != "" {
-				mission.Version = version
+		for _, root := range doc.ChildElements() {
+			if  strings.EqualFold(root.Tag, "MISSION") {
+				for _, el := range root.ChildElements() {
+					switch {
+					case strings.EqualFold(el.Tag, "VERSION"):
+						version := el.SelectAttrValue("value","")
+						if version != "" {
+							mission.Version = version
+						}
+					case strings.EqualFold(el.Tag,"MISSIONITEM"):
+						no, _ := strconv.Atoi(el.SelectAttrValue("no","0"))
+						action := el.SelectAttrValue("action","WAYPOINT")
+						lat,_ := strconv.ParseFloat(el.SelectAttrValue("lat","0"), 64)
+						lon,_ := strconv.ParseFloat(el.SelectAttrValue("lon","0"), 64)
+						alt, _ := strconv.Atoi(el.SelectAttrValue("alt","0"))
+						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1","0"))
+						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2","0"))
+						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3","0"))
+						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), uint16(p2), uint16(p3)}
+						mission.MissionItems = append(mission.MissionItems, item)
+					default:
+						// fmt.Printf("ignoring tag %s\n", el.Tag)
+					}
+				}
 			}
-		}
-		for _, pts := range root.FindElements("//MISSIONITEM") {
-			no, _ := strconv.Atoi(pts.SelectAttrValue("no","0"))
-			action := pts.SelectAttrValue("action","WAYPOINT")
-			lat,_ := strconv.ParseFloat(pts.SelectAttrValue("lat","0"), 64)
-			lon,_ := strconv.ParseFloat(pts.SelectAttrValue("lon","0"), 64)
-			alt, _ := strconv.Atoi(pts.SelectAttrValue("alt","0"))
-			p1, _ := strconv.Atoi(pts.SelectAttrValue("parameter1","0"))
-			p2, _ := strconv.Atoi(pts.SelectAttrValue("parameter2","0"))
-			p3, _ := strconv.Atoi(pts.SelectAttrValue("parameter3","0"))
-			item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), uint16(p2), uint16(p3)}
-			mission.MissionItems = append(mission.MissionItems, item)
 		}
 	}
 	return mission
@@ -310,7 +317,8 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 	switch {
 	case bytes.HasPrefix(dat, []byte("<?xml")):
 		switch {
-		case bytes.Contains(dat, []byte("<MISSION")):
+		case bytes.Contains(dat, []byte("<MISSION")),
+			bytes.Contains(dat, []byte("<mission")):
 			m = read_XML_mission(dat)
 			mtype = "mwx"
 		case bytes.Contains(dat, []byte("<gpx ")):
