@@ -120,16 +120,17 @@ func check_device() DevDescription {
 			}
 		}
 	}
-	if devdesc.name == "" && devdesc.param == 0 {
-		log.Fatalln("No device given\n")
+
+	if devdesc.name == "" {
+		log.Fatalln("No device available")
 	} else {
-		log.Printf("Using device %s\n", *device)
+		log.Printf("Using device [%v]\n", devdesc.name)
 	}
 	return devdesc
 }
 
 func parse_device() DevDescription {
-	dd := DevDescription{klass: DevClass_NONE }
+	dd := DevDescription{name: "", klass: DevClass_NONE }
 	r := regexp.MustCompile(`^(tcp|udp)://([\[\]:A-Za-z\-\.0-9]*):(\d+)/{0,1}([A-Za-z\-\.0-9]*):{0,1}(\d*)`)
 	m := r.FindAllStringSubmatch(*device,-1)
 	if len(m) > 0 {
