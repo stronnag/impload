@@ -29,6 +29,8 @@ const (
 	wp_WAYPOINT = 1
 	wp_RTH      = 4
 
+	wp_BAD = 182
+
 	state_INIT = iota
 	state_M
 	state_DIRN
@@ -124,6 +126,7 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 				len = inp[0]
 				buf = make([]byte, len)
 				crc = len
+				count = 0
 				n = state_CMD
 			case state_CMD:
 				cmd = inp[0]
@@ -145,7 +148,13 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 				if crc != ccrc {
 					ok = false
 				}
-				done = true
+				if cmd == wp_BAD { // unsolicited 182
+					ok = true
+					crc = 0
+					n = state_INIT
+				} else {
+					done = true
+				}
 			}
 		}
 	}
@@ -227,12 +236,22 @@ func MSPInit(dd DevDescription) *MSPSerial {
 		os.Exit(1)
 	}
 
+	ok := false
+
 	m.Send_msp(msp_API_VERSION, nil)
-	_, payload, err := m.Read_msp()
+	xcmd, payload, err := m.Read_msp()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "read: ", err)
+		fmt.Fprintf(os.Stderr, "%d read: %s\n", xcmd, err)
 	} else {
-		api = fmt.Sprintf("%d.%d", payload[1], payload[2])
+		if len(payload) > 2 {
+			api = fmt.Sprintf("%d.%d", payload[1], payload[2])
+			ok = true
+		}
+	}
+
+	if ok == false {
+		fmt.Fprintln(os.Stderr, "Failed to establish API Version")
+		os.Exit(1)
 	}
 
 	m.Send_msp(msp_FC_VARIANT, nil)
