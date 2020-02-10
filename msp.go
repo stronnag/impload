@@ -27,7 +27,13 @@ const (
 	msp_SET_WP = 209
 
 	wp_WAYPOINT = 1
-	wp_RTH      = 4
+	wp_POSHOLD_UNLIM = 2
+	wp_POSHOLD_TIME = 3
+	wp_RTH = 4
+	wp_SET_POI = 5
+	wp_JUMP = 6
+	wp_SET_HEAD = 7
+	wp_LAND = 8
 
 	wp_BAD = 182
 
@@ -314,14 +320,60 @@ func MSPInit(dd DevDescription) *MSPSerial {
 	return m
 }
 
+func decode_action(b byte) string {
+	var a string
+	switch b {
+	case wp_WAYPOINT:
+		a = "WAYPOINT"
+	case wp_POSHOLD_UNLIM:
+		a = "POSHOLD_UNLIM"
+	case wp_POSHOLD_TIME:
+		a = "POSHOLD_TIME"
+	case wp_RTH:
+		a = "RTH"
+	case wp_SET_POI:
+		a = "SET_POI"
+	case wp_JUMP:
+		a = "JUMP"
+	case wp_SET_HEAD:
+		a = "SET_HEAD"
+	case wp_LAND:
+		a = "LAND"
+	default:
+		a = "UNKNOWN"
+	}
+	return a
+}
+
+func encode_action (a string) byte {
+	var b byte;
+	switch a {
+	case "WAYPOINT":
+		b = wp_WAYPOINT
+	case "POSHOLD_UNLIM":
+		b = wp_POSHOLD_UNLIM
+	case "POSHOLD_TIME":
+		b = wp_POSHOLD_TIME
+	case "RTH":
+		b = wp_RTH
+	case "SET_POI":
+		b = wp_SET_POI
+	case "JUMP":
+		b = wp_JUMP
+	case "SET_HEAD":
+		b = wp_SET_HEAD
+	case "LAND":
+		b = wp_LAND
+	default:
+		b = wp_WAYPOINT
+	}
+	return b
+}
+
 func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	buf := make([]byte, 32)
 	buf[0] = byte(mi.No)
-	if mi.Action == "RTH" {
-		buf[1] = wp_RTH
-	} else {
-		buf[1] = wp_WAYPOINT
-	}
+	buf[1] = encode_action(mi.Action)
 	v := int32(mi.Lat * 1e7)
 	binary.LittleEndian.PutUint32(buf[2:6], uint32(v))
 	v = int32(mi.Lon * 1e7)
@@ -371,22 +423,21 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 func deserialise_wp(b []byte) (bool, MissionItem) {
 	var lat, lon float64
 	var action string
-	var p1 int16
+	var p1,p2 int16
+	var p3 uint16
 	var v, alt int32
 
-	if b[1] == wp_RTH {
-		action = "RTH"
-	} else {
-		action = "WAYPOINT"
-	}
+	action = decode_action(b[1])
 	v = int32(binary.LittleEndian.Uint32(b[2:6]))
 	lat = float64(v) / 1e7
 	v = int32(binary.LittleEndian.Uint32(b[6:10]))
 	lon = float64(v) / 1e7
 	alt = int32(binary.LittleEndian.Uint32(b[10:14]))/100
 	p1 = int16(binary.LittleEndian.Uint16(b[14:16]))
+	p2 = int16(binary.LittleEndian.Uint16(b[16:18]))
+	p3 = binary.LittleEndian.Uint16(b[18:20])
 	last := (b[20] == 0xa5)
-	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1}
+	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3}
 	return last, item
 }
 

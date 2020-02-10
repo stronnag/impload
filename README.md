@@ -58,14 +58,14 @@ udp://:14014/esp-air:14014
 # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
 ```
 
-# Use Cases
+## Use Cases
 
 * Plan missions in apm / qpc, upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Backup missions made in the configurator (as MW XML mission files)
 
-# Install
+## Install
 
 Binaries in the Release area (linux ia32/x86_64/arm7, Win32) if you don't want it build it locally.
 
@@ -78,7 +78,7 @@ go get github.com/tarm/serial
 go get github.com/beevik/etree
 ```
 
-# Examples
+## Examples
 
 ```
 # Linux, detect serial device, test communications
@@ -136,6 +136,6 @@ Waypoints: 12 of 60, valid 1
 > impload -d COM17 upload samples/google-earth-mission.kml
 ```
 
-# Postscript
+## Postscript
 
 The author knows how to spell "implode".

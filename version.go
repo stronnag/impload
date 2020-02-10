@@ -1,6 +1,6 @@
 package main
 
 const (
-	VERSION = "1.202.758"
-	RELINFO = "b8ee5d1 / 2019-07-21"
+	VERSION = "2.041.475"
+	RELINFO = "ab9a550 / 2020-02-10"
 	)

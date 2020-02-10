@@ -21,7 +21,7 @@ type MissionItem struct {
 	Lon    float64
 	Alt    int32
 	P1     int16
-	P2     uint16
+	P2     int16
 	P3     uint16
 }
 
@@ -262,7 +262,7 @@ func read_XML_mission(dat []byte) *Mission {
 						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1","0"))
 						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2","0"))
 						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3","0"))
-						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), uint16(p2), uint16(p3)}
+						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), uint16(p3)}
 						mission.MissionItems = append(mission.MissionItems, item)
 					default:
 						// fmt.Printf("ignoring tag %s\n", el.Tag)
