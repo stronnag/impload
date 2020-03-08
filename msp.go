@@ -26,17 +26,9 @@ const (
 	msp_WP     = 118
 	msp_SET_WP = 209
 
-	wp_WAYPOINT = 1
-	wp_POSHOLD_UNLIM = 2
-	wp_POSHOLD_TIME = 3
-	wp_RTH = 4
-	wp_SET_POI = 5
-	wp_JUMP = 6
-	wp_SET_HEAD = 7
-	wp_LAND = 8
-
 	wp_BAD = 182
-
+)
+const (
 	state_INIT = iota
 	state_M
 	state_DIRN
@@ -44,6 +36,17 @@ const (
 	state_CMD
 	state_DATA
 	state_CRC
+)
+
+const (
+	wp_WAYPOINT = 1 + iota
+	wp_POSHOLD_UNLIM
+	wp_POSHOLD_TIME
+	wp_RTH
+	wp_SET_POI
+	wp_JUMP
+	wp_SET_HEAD
+	wp_LAND
 )
 
 type MSPSerial struct {
