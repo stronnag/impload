@@ -165,10 +165,22 @@ func read_Simple(dat []byte) *Mission {
 			j = 1
 		}
 
+		lat, _ = strconv.ParseFloat(record[j+1], 64)
+		lon, _ = strconv.ParseFloat(record[j+2], 64)
 		alt, _ := strconv.ParseFloat(record[j+3], 64)
 		fp1, _ := strconv.ParseFloat(record[j+4], 64)
+		fp2, _ := strconv.ParseFloat(record[j+5], 64)
 		p1 := int16(0)
-		action := record[j]
+		p2 := int16(0)
+
+		var action string
+
+		iaction, err := strconv.Atoi(record[j])
+		if err == nil {
+			action = Decode_action(byte(iaction))
+		} else {
+			action = record[j]
+		}
 		switch action {
 		case "RTH":
 			lat = 0.0
@@ -179,15 +191,27 @@ func read_Simple(dat []byte) *Mission {
 			}
 		case "WAYPOINT", "WP":
 			action = "WAYPOINT"
-			lat, _ = strconv.ParseFloat(record[j+1], 64)
-			lon, _ = strconv.ParseFloat(record[j+2], 64)
+			if fp1 > 0 {
+				p1 = int16(fp1 * 100)
+			}
+		case "POSHOLD_TIME":
+			if fp2 > 0 {
+				p2 = int16(fp2 * 100)
+			}
+			p1 = int16(fp1);
+		case "JUMP":
+			lat = 0.0
+			lon = 0.0
+			p1 = int16(fp1);
+			p2 = int16(fp2);
+		case "LAND":
 			if fp1 > 0 {
 				p1 = int16(fp1 * 100)
 			}
 		default:
 			continue
 		}
-		item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: p1}
+		item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: p1, P2: p2}
 		mission.MissionItems = append(mission.MissionItems, item)
 		n++
 	}

@@ -323,7 +323,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 	return m
 }
 
-func decode_action(b byte) string {
+func Decode_action(b byte) string {
 	var a string
 	switch b {
 	case wp_WAYPOINT:
@@ -430,7 +430,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	var p3 uint16
 	var v, alt int32
 
-	action = decode_action(b[1])
+	action = Decode_action(b[1])
 	v = int32(binary.LittleEndian.Uint32(b[2:6]))
 	lat = float64(v) / 1e7
 	v = int32(binary.LittleEndian.Uint32(b[6:10]))
