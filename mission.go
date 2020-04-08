@@ -225,39 +225,108 @@ func read_QML(dat []byte) *Mission {
 
 	items := []MissionItem{}
 	mission := &Mission{GetVersion(), items}
+	last_alt := 0.0
+	last_lat := 0.0
+	last_lon := 0.0
 
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+	records,err := r.ReadAll()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		if len(record) == 12 && record[2] == "3" {
-			var lat, lon float64
-			var action string
-			no, _ := strconv.Atoi(record[0])
-			alt, _ := strconv.Atoi(record[10])
-			var p1 int16
-
+	have_land := false
+	lastj := -1
+	for j, record := range records {
+		if len(record) == 12 {
 			if record[3] == "20" {
-				lat = 0.0
-				lon = 0.0
-				if alt == 0 {
-					p1 = 1
-				}
-				alt = 0
-				action = "RTH"
-			} else {
-				p1 = 0
-				action = "WAYPOINT"
-				lat, _ = strconv.ParseFloat(record[8], 64)
-				lon, _ = strconv.ParseFloat(record[9], 64)
+				lastj = j
 			}
-			item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: p1}
-			mission.MissionItems = append(mission.MissionItems, item)
+			if record[3] == "21" && j == lastj+1 {
+				have_land = true
+			}
+		}
+	}
+
+	last := false
+	for _, record := range records {
+		if len(record) == 12 {
+			no, err := strconv.Atoi(record[0])
+			if err == nil && no > 0 {
+				var action string
+				alt, _ := strconv.ParseFloat(record[10], 64)
+				lat, _ := strconv.ParseFloat(record[8], 64)
+				lon, _ := strconv.ParseFloat(record[9], 64)
+				p1 := 0.0
+				p2 := 0.0
+				ok := true
+				switch record[3] {
+				case "16" :
+					p1,_ = strconv.ParseFloat(record[4], 64)
+					if p1 == 0 {
+						action = "WAYPOINT"
+						p1 = 0
+					} else {
+						action = "POSHOLD_TIME"
+					}
+				case "19" :
+					action = "POSHOLD_TIME"
+					p1,_ = strconv.ParseFloat(record[4], 64)
+					if alt == 0 {
+						alt = last_alt
+					}
+					if lat == 0.0 {
+						lat = last_lat
+					}
+					if lon == 0.0 {
+						lon = last_lon
+					}
+				case  "20" :
+					action = "RTH"
+					lat = 0.0
+					lon = 0.0
+					if alt == 0 || have_land {
+						p1 = 1
+					}
+					alt = 0
+					last = true
+				case "21" :
+					action = "LAND"
+					p1 = 0
+					if alt == 0 {
+						alt = last_alt
+					}
+					if lat == 0.0 {
+						lat = last_lat
+					}
+					if lon == 0.0 {
+						lon = last_lon
+					}
+				case  "177":
+					p1,_ = strconv.ParseFloat(record[4], 64)
+					if int(p1) < no - 1 {
+						action = "JUMP"
+						p2,_ = strconv.ParseFloat(record[5], 64)
+						lat = 0.0
+						lon = 0.0
+					} else {
+						ok = false
+					}
+				default:
+					ok = false
+				}
+				if ok {
+					last_alt = alt
+					last_lat = lat
+					last_lon = lon
+					item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: int16(p1), P2: int16(p2)}
+					mission.MissionItems = append(mission.MissionItems, item)
+					if last {
+						break
+					}
+				} else {
+					log.Fatalf("Unsupported QPC file, wp #%d\n",no)
+				}
+			}
 		}
 	}
 	return mission
