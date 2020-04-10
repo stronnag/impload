@@ -60,7 +60,7 @@ udp://:14014/esp-air:14014
 
 ## Use Cases
 
-* Plan missions in apm / qgc (QGC WPL 110 text files), upload (& save) to iNav
+* Plan missions in apmplanner2 (QGC WPL 110 text files), upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Backup missions made in the configurator (as MW XML mission files)
@@ -88,7 +88,7 @@ $ ./impload test
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
 Waypoints: 0 of 60, valid 0
 
-# Linux, detect serial device and upload a qgc /apm mission file
+# Linux, detect serial device and upload a apmplanner2 mission file
 $ ./impload upload samples/qpc_0.txt
 2018/05/24 18:09:10 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
