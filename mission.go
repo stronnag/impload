@@ -423,7 +423,7 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 		default:
 			m = nil
 		}
-	case bytes.HasPrefix(dat, []byte("QGC WPL")):
+	case bytes.HasPrefix(dat, []byte("QGC WPL 110")):
 		m = read_QML(dat)
 		mtype = "qml"
 	case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
