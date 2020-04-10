@@ -54,13 +54,13 @@ For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the 
 /dev/ttyACM0
 COM17@115200
 tcp://esp8266:23
-udp://:14014/esp-air:14014  
+udp://:14014/esp-air:14014
 # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
 ```
 
 ## Use Cases
 
-* Plan missions in apm / qpc, upload (& save) to iNav
+* Plan missions in apm / qgc (QGC WPL 110 text files), upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Backup missions made in the configurator (as MW XML mission files)
@@ -88,7 +88,7 @@ $ ./impload test
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
 Waypoints: 0 of 60, valid 0
 
-# Linux, detect serial device and upload a qpc /apm mission file
+# Linux, detect serial device and upload a qgc /apm mission file
 $ ./impload upload samples/qpc_0.txt
 2018/05/24 18:09:10 Using device /dev/ttyUSB0 115200
 INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
