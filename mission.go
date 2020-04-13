@@ -303,13 +303,13 @@ func read_QML(dat []byte) *Mission {
 					}
 				case  "177":
 					p1,_ = strconv.ParseFloat(record[4], 64)
-					if int(p1) < no - 1 {
+          if(int(p1) < 1 || ((int(p1) > no-2) && (int(p1) < no+2))) {
+						ok = false
+					} else {
 						action = "JUMP"
 						p2,_ = strconv.ParseFloat(record[5], 64)
 						lat = 0.0
 						lon = 0.0
-					} else {
-						ok = false
 					}
 				default:
 					ok = false
