@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-  "github.com/beevik/etree"
+	"github.com/beevik/etree"
 	"archive/zip"
 )
 
@@ -35,7 +35,7 @@ func read_KML(dat []byte) *Mission {
 	items := []MissionItem{}
 	mission := &Mission{GetVersion(), items}
 
-  doc := etree.NewDocument()
+	doc := etree.NewDocument()
 	if err := doc.ReadFromBytes(dat); err == nil {
 		root := doc.SelectElement("kml")
 		if src := root.FindElement("//Placemark/LineString/coordinates"); src != nil {
@@ -51,11 +51,11 @@ func read_KML(dat []byte) *Mission {
 					alt := 0.0
 					lon, _ := strconv.ParseFloat(coords[0], 64)
 					lat, _ := strconv.ParseFloat(coords[1], 64)
-/*
-					if len(coords) > 2 {
-						alt, _ = strconv.ParseFloat(coords[2], 64)
-					}
-*/
+					/*
+						if len(coords) > 2 {
+							alt, _ = strconv.ParseFloat(coords[2], 64)
+						}
+					*/
 					item := MissionItem{No: n, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
 					n++
 					mission.MissionItems = append(mission.MissionItems, item)
@@ -71,19 +71,19 @@ func read_GPX(dat []byte) *Mission {
 	mission := &Mission{GetVersion(), items}
 	stypes := []string{"//trkpt", "//rtept", "//wpt"}
 
-  doc := etree.NewDocument()
-  if err := doc.ReadFromBytes(dat); err == nil {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(dat); err == nil {
 		root := doc.SelectElement("gpx")
-		for _,stype:= range stypes {
+		for _, stype := range stypes {
 			for k, pts := range root.FindElements(stype) {
 				alt := 0.0
-				lat,_ := strconv.ParseFloat(pts.SelectAttrValue("lat","0"), 64)
-				lon,_ := strconv.ParseFloat(pts.SelectAttrValue("lon","0"), 64)
-/*
-				if anode := pts.SelectElement("ele"); anode != nil {
-					alt,_ = strconv.ParseFloat(anode.Text(), 64)
-        }
-*/
+				lat, _ := strconv.ParseFloat(pts.SelectAttrValue("lat", "0"), 64)
+				lon, _ := strconv.ParseFloat(pts.SelectAttrValue("lon", "0"), 64)
+				/*
+									if anode := pts.SelectElement("ele"); anode != nil {
+										alt,_ = strconv.ParseFloat(anode.Text(), 64)
+					        }
+				*/
 				item := MissionItem{No: k + 1, Lat: lat, Lon: lon, Alt: int32(alt), Action: "WAYPOINT"}
 				mission.MissionItems = append(mission.MissionItems, item)
 			}
@@ -91,6 +91,26 @@ func read_GPX(dat []byte) *Mission {
 		}
 	}
 	return mission
+}
+
+func (m *Mission) is_valid() bool {
+	mlen := int16(len(m.MissionItems))
+	if mlen > 60 {
+		return false
+	}
+	// Urg, Urg array index v. WP Nos ......
+	for i := int16(0); i < mlen; i++ {
+		var target = m.MissionItems[i].P1 - 1
+		if m.MissionItems[i].Action == "JUMP" {
+			if (i == 0) || ((target > (i - 2)) && (target < (i + 2))) || (target >= mlen) || (m.MissionItems[i].P2 < -1) {
+				return false
+			}
+			if !(m.MissionItems[target].Action == "WAYPOINT" || m.MissionItems[target].Action == "POSHOLD_TIME" || m.MissionItems[target].Action == "LAND") {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func (m *Mission) Add_rtl(land bool) {
@@ -108,16 +128,16 @@ func (m *Mission) Dump(path string) {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
 	x := doc.CreateElement("mission")
-	x.CreateComment(fmt.Sprintf("Created by \"impload\" v%s on %s\n      <https://github.com/stronnag/impload>\n  ",VERSION,t.Format(time.RFC3339)))
+	x.CreateComment(fmt.Sprintf("Created by \"impload\" v%s on %s\n      <https://github.com/stronnag/impload>\n  ", VERSION, t.Format(time.RFC3339)))
 	v := x.CreateElement("version")
 	v.CreateAttr("value", m.Version)
-	for _,mi := range m.MissionItems {
+	for _, mi := range m.MissionItems {
 		xi := x.CreateElement("missionitem")
 		xi.CreateAttr("no", fmt.Sprintf("%d", mi.No))
 		xi.CreateAttr("action", mi.Action)
 		xi.CreateAttr("lat", strconv.FormatFloat(mi.Lat, 'g', -1, 64))
 		xi.CreateAttr("lon", strconv.FormatFloat(mi.Lon, 'g', -1, 64))
-		xi.CreateAttr("alt", fmt.Sprintf("%d",mi.Alt))
+		xi.CreateAttr("alt", fmt.Sprintf("%d", mi.Alt))
 		xi.CreateAttr("parameter1", fmt.Sprintf("%d", mi.P1))
 		xi.CreateAttr("parameter2", fmt.Sprintf("%d", mi.P2))
 		xi.CreateAttr("parameter3", fmt.Sprintf("%d", mi.P3))
@@ -198,12 +218,12 @@ func read_Simple(dat []byte) *Mission {
 			if fp2 > 0 {
 				p2 = int16(fp2 * 100)
 			}
-			p1 = int16(fp1);
+			p1 = int16(fp1)
 		case "JUMP":
 			lat = 0.0
 			lon = 0.0
-			p1 = int16(fp1);
-			p2 = int16(fp2);
+			p1 = int16(fp1)
+			p2 = int16(fp2)
 		case "LAND":
 			if fp1 > 0 {
 				p1 = int16(fp1 * 100)
@@ -229,7 +249,7 @@ func read_QML(dat []byte) *Mission {
 	last_lat := 0.0
 	last_lon := 0.0
 
-	records,err := r.ReadAll()
+	records, err := r.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -260,17 +280,17 @@ func read_QML(dat []byte) *Mission {
 				p2 := 0.0
 				ok := true
 				switch record[3] {
-				case "16" :
-					p1,_ = strconv.ParseFloat(record[4], 64)
+				case "16":
+					p1, _ = strconv.ParseFloat(record[4], 64)
 					if p1 == 0 {
 						action = "WAYPOINT"
 						p1 = 0
 					} else {
 						action = "POSHOLD_TIME"
 					}
-				case "19" :
+				case "19":
 					action = "POSHOLD_TIME"
-					p1,_ = strconv.ParseFloat(record[4], 64)
+					p1, _ = strconv.ParseFloat(record[4], 64)
 					if alt == 0 {
 						alt = last_alt
 					}
@@ -280,7 +300,7 @@ func read_QML(dat []byte) *Mission {
 					if lon == 0.0 {
 						lon = last_lon
 					}
-				case  "20" :
+				case "20":
 					action = "RTH"
 					lat = 0.0
 					lon = 0.0
@@ -289,7 +309,7 @@ func read_QML(dat []byte) *Mission {
 					}
 					alt = 0
 					last = true
-				case "21" :
+				case "21":
 					action = "LAND"
 					p1 = 0
 					if alt == 0 {
@@ -301,13 +321,13 @@ func read_QML(dat []byte) *Mission {
 					if lon == 0.0 {
 						lon = last_lon
 					}
-				case  "177":
-					p1,_ = strconv.ParseFloat(record[4], 64)
-          if(int(p1) < 1 || ((int(p1) > no-2) && (int(p1) < no+2))) {
+				case "177":
+					p1, _ = strconv.ParseFloat(record[4], 64)
+					if int(p1) < 1 || ((int(p1) > no-2) && (int(p1) < no+2)) {
 						ok = false
 					} else {
 						action = "JUMP"
-						p2,_ = strconv.ParseFloat(record[5], 64)
+						p2, _ = strconv.ParseFloat(record[5], 64)
 						lat = 0.0
 						lon = 0.0
 					}
@@ -324,7 +344,7 @@ func read_QML(dat []byte) *Mission {
 						break
 					}
 				} else {
-					log.Fatalf("Unsupported QPC file, wp #%d\n",no)
+					log.Fatalf("Unsupported QPC file, wp #%d\n", no)
 				}
 			}
 		}
@@ -335,26 +355,26 @@ func read_QML(dat []byte) *Mission {
 func read_XML_mission(dat []byte) *Mission {
 	items := []MissionItem{}
 	mission := &Mission{"impload", items}
-  doc := etree.NewDocument()
-  if err := doc.ReadFromBytes(dat); err == nil {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromBytes(dat); err == nil {
 		for _, root := range doc.ChildElements() {
-			if  strings.EqualFold(root.Tag, "MISSION") {
+			if strings.EqualFold(root.Tag, "MISSION") {
 				for _, el := range root.ChildElements() {
 					switch {
 					case strings.EqualFold(el.Tag, "VERSION"):
-						version := el.SelectAttrValue("value","")
+						version := el.SelectAttrValue("value", "")
 						if version != "" {
 							mission.Version = version
 						}
-					case strings.EqualFold(el.Tag,"MISSIONITEM"):
-						no, _ := strconv.Atoi(el.SelectAttrValue("no","0"))
-						action := el.SelectAttrValue("action","WAYPOINT")
-						lat,_ := strconv.ParseFloat(el.SelectAttrValue("lat","0"), 64)
-						lon,_ := strconv.ParseFloat(el.SelectAttrValue("lon","0"), 64)
-						alt, _ := strconv.Atoi(el.SelectAttrValue("alt","0"))
-						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1","0"))
-						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2","0"))
-						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3","0"))
+					case strings.EqualFold(el.Tag, "MISSIONITEM"):
+						no, _ := strconv.Atoi(el.SelectAttrValue("no", "0"))
+						action := el.SelectAttrValue("action", "WAYPOINT")
+						lat, _ := strconv.ParseFloat(el.SelectAttrValue("lat", "0"), 64)
+						lon, _ := strconv.ParseFloat(el.SelectAttrValue("lon", "0"), 64)
+						alt, _ := strconv.Atoi(el.SelectAttrValue("alt", "0"))
+						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1", "0"))
+						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2", "0"))
+						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3", "0"))
 						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), uint16(p3)}
 						mission.MissionItems = append(mission.MissionItems, item)
 					default:
@@ -381,12 +401,12 @@ func ReadKMZ(path string) (string, *Mission) {
 			if err == nil {
 				mtype, m := handle_mission_data(dat, path)
 				if m != nil {
-					return mtype,m
+					return mtype, m
 				}
 			}
 		}
 	}
-	return "",nil
+	return "", nil
 }
 
 func Read_Mission_File(path string) (string, *Mission, error) {
@@ -430,11 +450,11 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 		bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
 		m = read_Simple(dat)
 		mtype = "csv"
-	case bytes.HasPrefix(dat,[]byte("PK\003\004")):
+	case bytes.HasPrefix(dat, []byte("PK\003\004")):
 		fmt.Printf("KMZ %s\n", path)
 		mtype, m = ReadKMZ(path)
 	default:
 		m = nil
 	}
-	return mtype,m
+	return mtype, m
 }

@@ -50,9 +50,9 @@ const (
 )
 
 type MSPSerial struct {
-	klass int
-	p *serial.Port
-	conn net.Conn
+	klass  int
+	p      *serial.Port
+	conn   net.Conn
 	reader *bufio.Reader
 }
 
@@ -188,7 +188,7 @@ func NewMSPTCP(dd DevDescription) *MSPSerial {
 	remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
 	addr, err := net.ResolveTCPAddr("tcp", remote)
 	if err == nil {
-    conn, err = net.DialTCP("tcp", nil, addr)
+		conn, err = net.DialTCP("tcp", nil, addr)
 	}
 
 	if err != nil {
@@ -199,7 +199,7 @@ func NewMSPTCP(dd DevDescription) *MSPSerial {
 
 func NewMSPUDP(dd DevDescription) *MSPSerial {
 	var laddr, raddr *net.UDPAddr
-	var reader  *bufio.Reader
+	var reader *bufio.Reader
 	var conn net.Conn
 	var err error
 
@@ -214,15 +214,15 @@ func NewMSPUDP(dd DevDescription) *MSPSerial {
 		}
 	}
 	if err == nil {
-		conn,err = net.DialUDP("udp", laddr, raddr)
+		conn, err = net.DialUDP("udp", laddr, raddr)
 		if err == nil {
-		reader = bufio.NewReader(conn)
+			reader = bufio.NewReader(conn)
 		}
 	}
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &MSPSerial{klass: dd.klass, conn: conn, reader : reader}
+	return &MSPSerial{klass: dd.klass, conn: conn, reader: reader}
 }
 
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
@@ -234,13 +234,13 @@ func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
 	var m *MSPSerial
 	switch dd.klass {
-		case DevClass_SERIAL:
+	case DevClass_SERIAL:
 		m = NewMSPSerial(dd)
 	case DevClass_TCP:
 		m = NewMSPTCP(dd)
 	case DevClass_UDP:
 		m = NewMSPUDP(dd)
-   default:
+	default:
 		fmt.Fprintln(os.Stderr, "Unsupported device")
 		os.Exit(1)
 	}
@@ -295,7 +295,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 		if len(payload) > 8 {
 			board = string(payload[9:])
 		} else {
-			board = string(payload[:4])
+			board = string(payload[0:4])
 		}
 	}
 
@@ -318,7 +318,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 		wp_max := payload[1]
 		wp_valid := payload[2]
 		wp_count := payload[3]
-		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	}
 	return m
 }
@@ -348,8 +348,8 @@ func Decode_action(b byte) string {
 	return a
 }
 
-func encode_action (a string) byte {
-	var b byte;
+func encode_action(a string) byte {
+	var b byte
 	switch a {
 	case "WAYPOINT":
 		b = wp_WAYPOINT
@@ -426,7 +426,7 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 func deserialise_wp(b []byte) (bool, MissionItem) {
 	var lat, lon float64
 	var action string
-	var p1,p2 int16
+	var p1, p2 int16
 	var p3 uint16
 	var v, alt int32
 
@@ -435,7 +435,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	lat = float64(v) / 1e7
 	v = int32(binary.LittleEndian.Uint32(b[6:10]))
 	lon = float64(v) / 1e7
-	alt = int32(binary.LittleEndian.Uint32(b[10:14]))/100
+	alt = int32(binary.LittleEndian.Uint32(b[10:14])) / 100
 	p1 = int16(binary.LittleEndian.Uint16(b[14:16]))
 	p2 = int16(binary.LittleEndian.Uint16(b[16:18]))
 	p3 = binary.LittleEndian.Uint16(b[18:20])
@@ -445,37 +445,42 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 }
 
 func (m *MSPSerial) upload(ms *Mission, eeprom bool) {
-	mlen := len(ms.MissionItems)
-	fmt.Fprintf(os.Stderr, "upload %d, save %v\n", mlen, eeprom)
-	for i, v := range ms.MissionItems {
-		fmt.Fprintf(os.Stderr, "Upload %d\r", i)
-		_, b := serialise_wp(v, (i == mlen-1))
-		m.Send_msp(msp_SET_WP, b)
-		_, _, err := m.Read_msp()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "for wp %d, %s\n", i, err)
-		}
-	}
 
-	if eeprom {
-		z := make([]byte, 1)
-		z[0] = 1
-		m.Send_msp(msp_WP_MISSION_SAVE, z)
-		_, _, err := m.Read_msp()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to save mission: %s\n", err)
-		} else {
-			fmt.Fprintf(os.Stderr, "Saved mission\n")
+	if ms.is_valid() {
+		mlen := len(ms.MissionItems)
+		fmt.Fprintf(os.Stderr, "upload %d, save %v\n", mlen, eeprom)
+		for i, v := range ms.MissionItems {
+			fmt.Fprintf(os.Stderr, "Upload %d\r", i)
+			_, b := serialise_wp(v, (i == mlen-1))
+			m.Send_msp(msp_SET_WP, b)
+			_, _, err := m.Read_msp()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "for wp %d, %s\n", i, err)
+			}
 		}
-	}
-	m.Send_msp(msp_WP_GETINFO, nil)
-	_, payload, err := m.Read_msp()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "read: ", err)
+
+		if eeprom {
+			z := make([]byte, 1)
+			z[0] = 1
+			m.Send_msp(msp_WP_MISSION_SAVE, z)
+			_, _, err := m.Read_msp()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "failed to save mission: %s\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "Saved mission\n")
+			}
+		}
+		m.Send_msp(msp_WP_GETINFO, nil)
+		_, payload, err := m.Read_msp()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "read: ", err)
+		} else {
+			wp_max := payload[1]
+			wp_valid := payload[2]
+			wp_count := payload[3]
+			fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		}
 	} else {
-		wp_max := payload[1]
-		wp_valid := payload[2]
-		wp_count := payload[3]
-		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Fprintf(os.Stderr, "Mission fails verification, upload cancelled\n")
 	}
 }
