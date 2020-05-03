@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os"
 	"github.com/beevik/etree"
 	"archive/zip"
 )
@@ -94,6 +95,10 @@ func read_GPX(dat []byte) *Mission {
 }
 
 func (m *Mission) is_valid() bool {
+	force := os.Getenv("IMPLOAD_NO_VERIFY")
+	if len(force) > 0 {
+		return true
+	}
 	mlen := int16(len(m.MissionItems))
 	if mlen > 60 {
 		return false
@@ -420,6 +425,9 @@ func Read_Mission_File(path string) (string, *Mission, error) {
 		return "?", nil, err
 	} else {
 		mtype, m := handle_mission_data(dat, path)
+		if !m.is_valid() {
+			fmt.Fprintf(os.Stderr, "Note: Mission fails verification\n")
+		}
 		return mtype, m, nil
 	}
 }

@@ -26,7 +26,8 @@ const (
 	msp_WP     = 118
 	msp_SET_WP = 209
 
-	wp_BAD = 182
+	wp_BAD       = 182
+	msp_DEBUGMSG = 253
 )
 const (
 	state_INIT = iota
@@ -157,7 +158,13 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 				if crc != ccrc {
 					ok = false
 				}
-				if cmd == wp_BAD { // unsolicited 182
+				if cmd == wp_BAD || cmd == msp_DEBUGMSG { // unsolicited
+					if cmd == msp_DEBUGMSG {
+						fmt.Fprintf(os.Stderr, "DEBUG: %s\n", string(buf))
+					}
+					if cmd == wp_BAD {
+						fmt.Fprintf(os.Stderr, "Unsolicited CMS message\n")
+					}
 					ok = true
 					crc = 0
 					n = state_INIT
