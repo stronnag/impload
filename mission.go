@@ -13,6 +13,7 @@ import (
 	"os"
 	"github.com/beevik/etree"
 	"archive/zip"
+	"encoding/json"
 )
 
 type MissionItem struct {
@@ -31,7 +32,7 @@ type Mission struct {
 	MissionItems []MissionItem
 }
 
-func read_KML(dat []byte) *Mission {
+func read_kml(dat []byte) *Mission {
 
 	items := []MissionItem{}
 	mission := &Mission{GetVersion(), items}
@@ -67,7 +68,7 @@ func read_KML(dat []byte) *Mission {
 	return mission
 }
 
-func read_GPX(dat []byte) *Mission {
+func read_gpx(dat []byte) *Mission {
 	items := []MissionItem{}
 	mission := &Mission{GetVersion(), items}
 	stypes := []string{"//trkpt", "//rtept", "//wpt"}
@@ -154,7 +155,7 @@ func (m *Mission) Dump(path string) {
 	}
 }
 
-func read_Simple(dat []byte) *Mission {
+func read_simple(dat []byte) *Mission {
 	r := csv.NewReader(strings.NewReader(string(dat)))
 
 	items := []MissionItem{}
@@ -190,14 +191,16 @@ func read_Simple(dat []byte) *Mission {
 			j = 1
 		}
 
+		p1 := int16(0)
+		p2 := int16(0)
+		fp2 := 0.0
 		lat, _ = strconv.ParseFloat(record[j+1], 64)
 		lon, _ = strconv.ParseFloat(record[j+2], 64)
 		alt, _ := strconv.ParseFloat(record[j+3], 64)
 		fp1, _ := strconv.ParseFloat(record[j+4], 64)
-		fp2, _ := strconv.ParseFloat(record[j+5], 64)
-		p1 := int16(0)
-		p2 := int16(0)
-
+		if len(record) > j+5 {
+			fp2, _ = strconv.ParseFloat(record[j+5], 64)
+		}
 		var action string
 
 		iaction, err := strconv.Atoi(record[j])
@@ -243,7 +246,7 @@ func read_Simple(dat []byte) *Mission {
 	return mission
 }
 
-func read_QML(dat []byte) *Mission {
+func read_qgc(dat []byte) *Mission {
 	r := csv.NewReader(strings.NewReader(string(dat)))
 	r.Comma = '\t'
 	r.FieldsPerRecord = -1
@@ -357,7 +360,7 @@ func read_QML(dat []byte) *Mission {
 	return mission
 }
 
-func read_XML_mission(dat []byte) *Mission {
+func read_xml_mission(dat []byte) *Mission {
 	items := []MissionItem{}
 	mission := &Mission{"impload", items}
 	doc := etree.NewDocument()
@@ -392,7 +395,7 @@ func read_XML_mission(dat []byte) *Mission {
 	return mission
 }
 
-func ReadKMZ(path string) (string, *Mission) {
+func read_kmz(path string) (string, *Mission) {
 	r, err := zip.OpenReader(path)
 	if err != nil {
 		log.Fatal(err)
@@ -412,6 +415,23 @@ func ReadKMZ(path string) (string, *Mission) {
 		}
 	}
 	return "", nil
+}
+
+func read_json(dat []byte) *Mission {
+	items := []MissionItem{}
+	mission := &Mission{"impload", items}
+	var result map[string]interface{}
+	json.Unmarshal(dat, &result)
+	mi := result["mission"].([]interface{})
+	for _, l := range mi {
+		ll := l.(map[string]interface{})
+		item := MissionItem{int(ll["no"].(float64)), ll["action"].(string),
+			ll["lat"].(float64), ll["lon"].(float64),
+			int32(ll["alt"].(float64)), int16(ll["p1"].(float64)),
+			int16(ll["p2"].(float64)), uint16(ll["p3"].(float64))}
+		mission.MissionItems = append(mission.MissionItems, item)
+	}
+	return mission
 }
 
 func Read_Mission_File(path string) (string, *Mission, error) {
@@ -440,27 +460,29 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 		switch {
 		case bytes.Contains(dat, []byte("<MISSION")),
 			bytes.Contains(dat, []byte("<mission")):
-			m = read_XML_mission(dat)
+			m = read_xml_mission(dat)
 			mtype = "mwx"
 		case bytes.Contains(dat, []byte("<gpx ")):
-			m = read_GPX(dat)
+			m = read_gpx(dat)
 			mtype = "gpx"
 		case bytes.Contains(dat, []byte("<kml ")):
-			m = read_KML(dat)
+			m = read_kml(dat)
 			mtype = "kml"
 		default:
 			m = nil
 		}
 	case bytes.HasPrefix(dat, []byte("QGC WPL 110")):
-		m = read_QML(dat)
-		mtype = "qml"
+		m = read_qgc(dat)
+		mtype = "qgc"
 	case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
 		bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
-		m = read_Simple(dat)
+		m = read_simple(dat)
 		mtype = "csv"
 	case bytes.HasPrefix(dat, []byte("PK\003\004")):
-		fmt.Printf("KMZ %s\n", path)
-		mtype, m = ReadKMZ(path)
+		mtype, m = read_kmz(path)
+	case bytes.HasPrefix(dat, []byte("{\"meta\":{")):
+		mtype = "mwp-json"
+		m = read_json(dat)
 	default:
 		m = nil
 	}
