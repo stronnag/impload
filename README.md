@@ -3,7 +3,7 @@ impload - iNav Mission Plan uploader
 
 # Introduction
 
-[impload](https://github.com/stronnag/impload) is a cross-platform command line application to upload missions in a number of formats to an iNav flight controller. Supported formats include:
+[impload](https://github.com/stronnag/impload) is a cross-platform command line application to upload missions in a number of formats to an iNav flight controller. "Alien" formats may also be converted to MW-XML. Supported formats include:
 
 * MW XML mission files (as used by [mwp](https://github.com/stronnag/mwptools), ezgui, mission planner for inav)
 * apmplanner / qgroundcontrol mission files
@@ -63,7 +63,7 @@ udp://:14014/esp-air:14014
 * Plan missions in apmplanner2 (QGC WPL 110 text files), upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
-* Backup missions made in the configurator (as MW XML mission files)
+* Convert "alien" formats to MW-XML.
 
 ## Install
 
@@ -134,6 +134,9 @@ Waypoints: 12 of 60, valid 1
 
 > REM  Windows, needs a named device to be given
 > impload -d COM17 upload samples/google-earth-mission.kml
+
+# Conversion
+$ impload convert g-earth.kmz example.mission
 ```
 
 ## Postscript
