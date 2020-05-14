@@ -10,6 +10,7 @@ impload - iNav Mission Plan uploader
 * GPX files (tracks, routes, waypoints)
 * KML, KMZ files
 * Plain, simple CSV files
+* mwp JSON mission files
 
 Serial devices and TCP are supported
 
