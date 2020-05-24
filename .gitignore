@@ -4,3 +4,5 @@
 impload
 mkrel.sh
 *.backup
+mkbuilds.sh
+README.pdf
