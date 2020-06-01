@@ -6,3 +6,4 @@ mkrel.sh
 *.backup
 mkbuilds.sh
 README.pdf
+go.sum
