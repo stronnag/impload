@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/tarm/serial"
+	//	"github.com/tarm/serial"
+	"go.bug.st/serial"
+	//	"go.bug.st/serial/enumerator"
 	"log"
-	"os"
 	"net"
-	"bufio"
+	"os"
 )
 
 const (
@@ -52,7 +54,7 @@ const (
 
 type MSPSerial struct {
 	klass  int
-	p      *serial.Port
+	p      serial.Port
 	conn   net.Conn
 	reader *bufio.Reader
 }
@@ -134,7 +136,6 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 				}
 			case state_LEN:
 				len = inp[0]
-				buf = make([]byte, len)
 				crc = len
 				count = 0
 				n = state_CMD
@@ -144,6 +145,7 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 				if len == 0 {
 					n = state_CRC
 				} else {
+					buf = make([]byte, len)
 					n = state_DATA
 				}
 			case state_DATA:
@@ -172,6 +174,8 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 					done = true
 				}
 			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Read err\n")
 		}
 	}
 	if !ok {
@@ -182,8 +186,13 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 }
 
 func NewMSPSerial(dd DevDescription) *MSPSerial {
-	c := &serial.Config{Name: dd.name, Baud: dd.param}
-	p, err := serial.OpenPort(c)
+	//	c := &serial.Config{Name: dd.name, Baud: dd.param, ReadTimeout: time.Second * 1}
+	//	p, err := serial.OpenPort(c)
+
+	mode := &serial.Mode{
+		BaudRate: dd.param,
+	}
+	p, err := serial.Open(dd.name, mode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -400,6 +409,38 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	return len(buf), buf
 }
 
+/************
+func ListPorts() {
+	ports, err := serial.GetPortsList()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ports) == 0 {
+		log.Fatal("No serial ports found!")
+	}
+	for _, port := range ports {
+		fmt.Printf("Found port: %v\n", port)
+	}
+}
+
+func Enumerator() {
+	ports, err := enumerator.GetDetailedPortsList()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(ports) == 0 {
+		fmt.Println("No serial ports found!")
+		return
+	}
+	for _, port := range ports {
+		fmt.Printf("Found port: %s\n", port.Name)
+		if port.IsUSB {
+			fmt.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
+			fmt.Printf("   USB serial %s\n", port.SerialNumber)
+		}
+	}
+}
+**********/
 func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 	if eeprom {
 		z := make([]byte, 1)

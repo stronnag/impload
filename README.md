@@ -68,14 +68,14 @@ udp://:14014/esp-air:14014
 
 ## Install
 
-Binaries in the Release area (linux ia32/x86_64/arm7, Win32) if you don't want it build it locally.
+Binaries in the Release area (linux ia32/x86_64/arm7, FreeBSD, MacOS, Win32) if you don't want it build it locally.
 
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
 
 Note: If you clone the repo, then you need to `go get` the dependencies:
 
 ```
-go get github.com/tarm/serial
+go get go.bug.st/serial
 go get github.com/beevik/etree
 ```
 
