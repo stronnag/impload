@@ -5,9 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	//	"github.com/tarm/serial"
 	"go.bug.st/serial"
-	//	"go.bug.st/serial/enumerator"
 	"log"
 	"net"
 	"os"
@@ -186,9 +184,6 @@ func (m *MSPSerial) Read_msp() (byte, []byte, error) {
 }
 
 func NewMSPSerial(dd DevDescription) *MSPSerial {
-	//	c := &serial.Config{Name: dd.name, Baud: dd.param, ReadTimeout: time.Second * 1}
-	//	p, err := serial.OpenPort(c)
-
 	mode := &serial.Mode{
 		BaudRate: dd.param,
 	}
@@ -409,38 +404,6 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	return len(buf), buf
 }
 
-/************
-func ListPorts() {
-	ports, err := serial.GetPortsList()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(ports) == 0 {
-		log.Fatal("No serial ports found!")
-	}
-	for _, port := range ports {
-		fmt.Printf("Found port: %v\n", port)
-	}
-}
-
-func Enumerator() {
-	ports, err := enumerator.GetDetailedPortsList()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(ports) == 0 {
-		fmt.Println("No serial ports found!")
-		return
-	}
-	for _, port := range ports {
-		fmt.Printf("Found port: %s\n", port.Name)
-		if port.IsUSB {
-			fmt.Printf("   USB ID     %s:%s\n", port.VID, port.PID)
-			fmt.Printf("   USB serial %s\n", port.SerialNumber)
-		}
-	}
-}
-**********/
 func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 	if eeprom {
 		z := make([]byte, 1)

@@ -352,7 +352,7 @@ func read_qgc(dat []byte) *Mission {
 						break
 					}
 				} else {
-					log.Fatalf("Unsupported QPC file, wp #%d\n", no)
+					log.Fatalf("Unsupported QGC file, wp #%d\n", no)
 				}
 			}
 		}
