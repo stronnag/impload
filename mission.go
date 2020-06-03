@@ -134,7 +134,7 @@ func (m *Mission) Dump(path string) {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
 	x := doc.CreateElement("mission")
-	x.CreateComment(fmt.Sprintf("Created by \"impload\" v%s on %s\n      <https://github.com/stronnag/impload>\n  ", VERSION, t.Format(time.RFC3339)))
+	x.CreateComment(fmt.Sprintf("Created by \"impload\" %s on %s\n      <https://github.com/stronnag/impload>\n  ", GitTag, t.Format(time.RFC3339)))
 	v := x.CreateElement("version")
 	v.CreateAttr("value", m.Version)
 	for _, mi := range m.MissionItems {
