@@ -49,7 +49,7 @@ const (
 	wp_LAND
 )
 
-type SChan struct {
+type MsgData struct {
 	cmd  byte
 	len  int
 	data []byte
@@ -60,7 +60,7 @@ type MSPSerial struct {
 	p      serial.Port
 	conn   net.Conn
 	reader *bufio.Reader
-	c0     chan SChan
+	c0     chan MsgData
 }
 
 func encode_msp(cmd byte, payload []byte) []byte {
@@ -103,13 +103,13 @@ func (m *MSPSerial) write(payload []byte) (int, error) {
 	}
 }
 
-func (m *MSPSerial) Read_msp(c0 chan SChan) {
+func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 	inp := make([]byte, 128)
 	var count = byte(0)
 	var len = byte(0)
 	var crc = byte(0)
 	var cmd = byte(0)
-	var sc SChan
+	var sc MsgData
 
 	n := state_INIT
 
@@ -234,6 +234,22 @@ func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 	m.write(buf)
 }
 
+func (m *MSPSerial) Wait_msp(cmd byte, payload []byte) MsgData {
+	buf := encode_msp(cmd, payload)
+	m.write(buf)
+
+	var v MsgData
+	for done := false; !done; {
+		select {
+		case v = <-m.c0:
+			if v.cmd == cmd {
+				done = true
+			}
+		}
+	}
+	return v
+}
+
 func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
 	var m *MSPSerial
@@ -249,7 +265,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 		os.Exit(1)
 	}
 
-	m.c0 = make(chan SChan)
+	m.c0 = make(chan MsgData)
 	go m.Read_msp(m.c0)
 
 	m.Send_msp(msp_API_VERSION, nil)
@@ -375,13 +391,8 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 	if eeprom {
 		z := make([]byte, 1)
 		z[0] = 1
-		m.Send_msp(msp_WP_MISSION_LOAD, z)
-		v := <-m.c0
-		if v.cmd == msp_WP_MISSION_LOAD {
-			fmt.Fprintf(os.Stderr, "failed to restore mission\n")
-		} else {
-			fmt.Fprintf(os.Stderr, "Restored mission\n")
-		}
+		m.Wait_msp(msp_WP_MISSION_LOAD, z)
+		fmt.Fprintf(os.Stderr, "Restored mission\n")
 	}
 
 	var last bool
@@ -390,8 +401,7 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 	items := []MissionItem{}
 	mission := &Mission{s, items}
 	for z[0] = 1; !last; z[0]++ {
-		m.Send_msp(msp_WP, z)
-		v := <-m.c0
+		v := m.Wait_msp(msp_WP, z)
 		if v.len > 0 {
 			l, mi := deserialise_wp(v.data)
 			last = l
@@ -430,34 +440,20 @@ func (m *MSPSerial) upload(ms *Mission, eeprom bool) {
 		for i, v := range ms.MissionItems {
 			fmt.Fprintf(os.Stderr, "Upload %d\r", i)
 			_, b := serialise_wp(v, (i == mlen-1))
-			m.Send_msp(msp_SET_WP, b)
-			v := <-m.c0
-			if v.cmd != msp_SET_WP {
-				fmt.Fprintf(os.Stderr, "error for wp %d\n", i)
-			}
+			m.Wait_msp(msp_SET_WP, b)
 		}
 
 		if eeprom {
 			z := make([]byte, 1)
 			z[0] = 1
-			m.Send_msp(msp_WP_MISSION_SAVE, z)
-			v := <-m.c0
-			if v.cmd != msp_WP_MISSION_SAVE {
-				fmt.Fprintf(os.Stderr, "failed to save mission\n")
-			} else {
-				fmt.Fprintf(os.Stderr, "Saved mission\n")
-			}
+			m.Wait_msp(msp_WP_MISSION_SAVE, z)
+			fmt.Fprintf(os.Stderr, "Saved mission\n")
 		}
-		m.Send_msp(msp_WP_GETINFO, nil)
-		v := <-m.c0
-		if v.cmd != msp_WP_GETINFO {
-			fmt.Fprintln(os.Stderr, "read error")
-		} else {
-			wp_max := v.data[1]
-			wp_valid := v.data[2]
-			wp_count := v.data[3]
-			fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
-		}
+		v := m.Wait_msp(msp_WP_GETINFO, nil)
+		wp_max := v.data[1]
+		wp_valid := v.data[2]
+		wp_count := v.data[3]
+		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	} else {
 		fmt.Fprintf(os.Stderr, "Mission fails verification, upload cancelled\n")
 	}
