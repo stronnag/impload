@@ -16,6 +16,15 @@ import (
 	"encoding/json"
 )
 
+type QGCrec struct {
+	jindex  int
+	command int
+	lat     float64
+	lon     float64
+	alt     float64
+	params  [4]float64
+}
+
 type MissionItem struct {
 	No     int
 	Action string
@@ -129,12 +138,32 @@ func (m *Mission) Add_rtl(land bool) {
 	m.MissionItems = append(m.MissionItems, item)
 }
 
-func (m *Mission) Dump(path string) {
+func (m *Mission) Dump(params ...string) {
 	t := time.Now()
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
 	x := doc.CreateElement("mission")
-	x.CreateComment(fmt.Sprintf("Created by \"impload\" %s on %s\n      <https://github.com/stronnag/impload>\n  ", GitTag, t.Format(time.RFC3339)))
+
+	var sb strings.Builder
+	sb.WriteString("Created by \"impload\" ")
+	sb.WriteString(GitTag)
+	sb.WriteString(" on ")
+	sb.WriteString(t.Format(time.RFC3339))
+	if len(params) > 1 {
+		sb.WriteString("\n      from ")
+		if params[1] == "-" {
+			sb.WriteString("<stdin>")
+		} else {
+			sb.WriteString(params[1])
+		}
+		if len(params) > 2 {
+			sb.WriteString(" (")
+			sb.WriteString(params[2])
+			sb.WriteByte(')')
+		}
+	}
+	sb.WriteString("\n      <https://github.com/stronnag/impload>\n")
+	x.CreateComment(sb.String())
 	v := x.CreateElement("version")
 	v.CreateAttr("value", m.Version)
 	for _, mi := range m.MissionItems {
@@ -148,7 +177,7 @@ func (m *Mission) Dump(path string) {
 		xi.CreateAttr("parameter2", fmt.Sprintf("%d", mi.P2))
 		xi.CreateAttr("parameter3", fmt.Sprintf("%d", mi.P3))
 	}
-	w, err := openStdoutOrFile(path)
+	w, err := openStdoutOrFile(params[0])
 	if err == nil {
 		doc.Indent(2)
 		doc.WriteTo(w)
@@ -246,116 +275,228 @@ func read_simple(dat []byte) *Mission {
 	return mission
 }
 
-func read_qgc(dat []byte) *Mission {
+func read_qgc_json(dat []byte) []QGCrec {
+	qgcs := []QGCrec{}
+	var result map[string]interface{}
+
+	json.Unmarshal(dat, &result)
+	mi := result["mission"].(interface{})
+	mid := mi.(map[string]interface{})
+	it := mid["items"].([]interface{})
+
+	for _, l := range it {
+		ll := l.(map[string]interface{})
+		ps := ll["params"].([]interface{})
+		qg := QGCrec{}
+		qg.jindex = int(ll["doJumpId"].(float64))
+		qg.command = int(ll["command"].(float64))
+		qg.lat = ps[4].(float64)
+		qg.lon = ps[5].(float64)
+		qg.alt = ps[6].(float64)
+		for j := 0; j < 4; j++ {
+			if ps[j] != nil {
+				qg.params[j] = ps[j].(float64)
+			}
+		}
+		qgcs = append(qgcs, qg)
+	}
+	return qgcs
+}
+
+func read_qgc_text(dat []byte) []QGCrec {
+	qgcs := []QGCrec{}
+
 	r := csv.NewReader(strings.NewReader(string(dat)))
 	r.Comma = '\t'
 	r.FieldsPerRecord = -1
+	records, err := r.ReadAll()
+	if err == nil {
+		for _, record := range records {
+			if len(record) == 12 {
+				no, err := strconv.Atoi(record[0])
+				if err == nil && no > 0 {
+					qg := QGCrec{}
+					qg.jindex = no
+					qg.command, _ = strconv.Atoi(record[3])
+					qg.alt, _ = strconv.ParseFloat(record[10], 64)
+					qg.lat, _ = strconv.ParseFloat(record[8], 64)
+					qg.lon, _ = strconv.ParseFloat(record[9], 64)
+					for j := 0; j < 4; j++ {
+						qg.params[j], _ = strconv.ParseFloat(record[4+j], 64)
+					}
+					qgcs = append(qgcs, qg)
+				}
+			}
+		}
+	} else {
+		log.Fatal(err)
+	}
+	return qgcs
+}
 
+func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
+	ok := true
+	if have_jump {
+		for i := 0; i < len(mission.MissionItems); i++ {
+			if mission.MissionItems[i].Action == "JUMP" {
+				jumptgt := mission.MissionItems[i].P1
+				ajump := int16(0)
+				for j := 0; j < len(mission.MissionItems); j++ {
+					if mission.MissionItems[j].P3 == uint16(jumptgt) {
+						ajump = int16(j + 1)
+						break
+					}
+				}
+				if ajump == 0 {
+					ok = false
+				} else {
+					mission.MissionItems[i].P1 = ajump
+				}
+				no := int16(i + 1) // item index
+				if mission.MissionItems[i].P1 < 1 || ((mission.MissionItems[i].P1 > no-2) &&
+					(mission.MissionItems[i].P1 < no+2)) {
+					ok = false
+				}
+			}
+		}
+	}
+	if ok {
+		for i := 0; i < len(mission.MissionItems); i++ {
+			mission.MissionItems[i].P3 = 0
+		}
+		return mission, ok
+	} else {
+		return nil, false
+	}
+}
+
+func process_qgc(dat []byte, mtype string) *Mission {
+	var qs []QGCrec
 	items := []MissionItem{}
 	mission := &Mission{GetVersion(), items}
+
+	if mtype == "qgc-text" {
+		qs = read_qgc_text(dat)
+	} else {
+		qs = read_qgc_json(dat)
+	}
 	last_alt := 0.0
 	last_lat := 0.0
 	last_lon := 0.0
 
-	records, err := r.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	have_land := false
 	lastj := -1
-	for j, record := range records {
-		if len(record) == 12 {
-			if record[3] == "20" {
-				lastj = j
-			}
-			if record[3] == "21" && j == lastj+1 {
-				have_land = true
-			}
+
+	for j, rq := range qs {
+		if rq.command == 20 {
+			lastj = j
+		} else if rq.command == 21 && j == lastj+1 {
+			have_land = true
 		}
 	}
 
 	last := false
-	for _, record := range records {
-		if len(record) == 12 {
-			no, err := strconv.Atoi(record[0])
-			if err == nil && no > 0 {
-				var action string
-				alt, _ := strconv.ParseFloat(record[10], 64)
-				lat, _ := strconv.ParseFloat(record[8], 64)
-				lon, _ := strconv.ParseFloat(record[9], 64)
-				p1 := 0.0
-				p2 := 0.0
-				ok := true
-				switch record[3] {
-				case "16":
-					p1, _ = strconv.ParseFloat(record[4], 64)
-					if p1 == 0 {
-						action = "WAYPOINT"
-						p1 = 0
-					} else {
-						action = "POSHOLD_TIME"
-					}
-				case "19":
-					action = "POSHOLD_TIME"
-					p1, _ = strconv.ParseFloat(record[4], 64)
-					if alt == 0 {
-						alt = last_alt
-					}
-					if lat == 0.0 {
-						lat = last_lat
-					}
-					if lon == 0.0 {
-						lon = last_lon
-					}
-				case "20":
-					action = "RTH"
-					lat = 0.0
-					lon = 0.0
-					if alt == 0 || have_land {
-						p1 = 1
-					}
-					alt = 0
-					last = true
-				case "21":
-					action = "LAND"
-					p1 = 0
-					if alt == 0 {
-						alt = last_alt
-					}
-					if lat == 0.0 {
-						lat = last_lat
-					}
-					if lon == 0.0 {
-						lon = last_lon
-					}
-				case "177":
-					p1, _ = strconv.ParseFloat(record[4], 64)
-					if int(p1) < 1 || ((int(p1) > no-2) && (int(p1) < no+2)) {
-						ok = false
-					} else {
-						action = "JUMP"
-						p2, _ = strconv.ParseFloat(record[5], 64)
-						lat = 0.0
-						lon = 0.0
-					}
-				default:
-					ok = false
-				}
-				if ok {
-					last_alt = alt
-					last_lat = lat
-					last_lon = lon
-					item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: int16(p1), P2: int16(p2)}
-					mission.MissionItems = append(mission.MissionItems, item)
-					if last {
-						break
-					}
-				} else {
-					log.Fatalf("Unsupported QGC file, wp #%d\n", no)
-				}
+	have_jump := false
+
+	no := 0
+	for _, q := range qs {
+		ok := true
+		var action string
+		var p1, p2 int16
+
+		switch q.command {
+		case 16:
+			if q.params[0] == 0 {
+				action = "WAYPOINT"
+				p1 = 0
+			} else {
+				action = "POSHOLD_TIME"
+				p1 = int16(q.params[0])
+			}
+
+		case 19:
+			action = "POSHOLD_TIME"
+			p1 = int16(q.params[0])
+			if q.alt == 0 {
+				q.alt = last_alt
+			}
+			if q.lat == 0.0 {
+				q.lat = last_lat
+			}
+			if q.lon == 0.0 {
+				q.lon = last_lon
+			}
+		case 20:
+			action = "RTH"
+			q.lat = 0.0
+			q.lon = 0.0
+			if q.alt == 0 || have_land {
+				p1 = 1
+			}
+			q.alt = 0
+			last = true
+
+		case 21:
+			action = "LAND"
+			p1 = 0
+			if q.alt == 0 {
+				q.alt = last_alt
+			}
+			if q.lat == 0.0 {
+				q.lat = last_lat
+			}
+			if q.lon == 0.0 {
+				q.lon = last_lon
+			}
+		case 177:
+			p1 = int16(q.params[0])
+			action = "JUMP"
+			p2 = int16(q.params[1])
+			q.lat = 0.0
+			q.lon = 0.0
+			have_jump = true
+
+		case 195, 201:
+			action = "SET_POI"
+
+		case 115:
+			p1 = int16(q.params[0])
+			act := int(q.params[3])
+			if p1 == 0 && act == 0 {
+				p1 = -1
+			}
+			action = "SET_HEAD"
+			q.lat = 0
+			q.lon = 0
+			q.alt = 0
+
+		case 197:
+			p1 = -1
+			action = "SET_HEAD"
+			q.lat = 0
+			q.lon = 0
+			q.alt = 0
+
+		default:
+			ok = false
+		}
+		if ok {
+			last_alt = q.alt
+			last_lat = q.lat
+			last_lon = q.lon
+			p3 := uint16(q.jindex)
+			no += 1
+			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
+			mission.MissionItems = append(mission.MissionItems, item)
+			if last {
+				break
 			}
 		}
+	}
+
+	mission, ok := fixup_qgc_mission(mission, have_jump)
+	if !ok {
+		log.Fatalf("Unsupported QGC file\n")
 	}
 	return mission
 }
@@ -472,8 +613,8 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 			m = nil
 		}
 	case bytes.HasPrefix(dat, []byte("QGC WPL 110")):
-		m = read_qgc(dat)
-		mtype = "qgc"
+		mtype = "qgc-text"
+		m = process_qgc(dat, mtype)
 	case bytes.HasPrefix(dat, []byte("no,wp,lat,lon,alt,p1")),
 		bytes.HasPrefix(dat, []byte("wp,lat,lon,alt,p1")):
 		m = read_simple(dat)
@@ -483,6 +624,9 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 	case bytes.HasPrefix(dat, []byte("{\"meta\":{")):
 		mtype = "mwp-json"
 		m = read_json(dat)
+	case bytes.Contains(dat[0:100], []byte("\"fileType\": \"Plan\"")):
+		mtype = "qgc-json"
+		m = process_qgc(dat, mtype)
 	default:
 		m = nil
 	}

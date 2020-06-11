@@ -53,7 +53,7 @@ func do_convert(inf string, outf string) {
 	mtype, m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
 		sanitise_mission(m, mtype)
-		m.Dump(outf)
+		m.Dump(outf, inf, mtype)
 	} else {
 		log.Fatal("Invalid input file\n")
 	}

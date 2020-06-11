@@ -62,6 +62,7 @@ udp://:14014/esp-air:14014
 ## Use Cases
 
 * Plan missions in apmplanner2 (QGC WPL 110 text files), upload (& save) to iNav
+* Plan missions in qgroundcontrol (JSON plan files), upload (& save) to iNav
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Convert "alien" formats to MW-XML.
