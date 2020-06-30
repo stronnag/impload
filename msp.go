@@ -60,6 +60,7 @@ type MSPSerial struct {
 	p      serial.Port
 	conn   net.Conn
 	reader *bufio.Reader
+	fd     int
 	c0     chan MsgData
 }
 
@@ -86,19 +87,26 @@ func encode_msp(cmd byte, payload []byte) []byte {
 }
 
 func (m *MSPSerial) read(inp []byte) (int, error) {
-	if m.klass == DevClass_SERIAL {
+	switch m.klass {
+	case DevClass_SERIAL:
 		return m.p.Read(inp)
-	} else if m.klass == DevClass_TCP {
+	case DevClass_TCP:
 		return m.conn.Read(inp)
-	} else {
+	case DevClass_UDP:
 		return m.reader.Read(inp)
+	case DevClass_BT:
+		return Read_bt(m.fd, inp)
 	}
+	return -1, nil
 }
 
 func (m *MSPSerial) write(payload []byte) (int, error) {
-	if m.klass == DevClass_SERIAL {
+	switch m.klass {
+	case DevClass_SERIAL:
 		return m.p.Write(payload)
-	} else {
+	case DevClass_BT:
+		return Write_bt(m.fd, payload)
+	default:
 		return m.conn.Write(payload)
 	}
 }
@@ -180,53 +188,57 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 }
 
 func NewMSPSerial(dd DevDescription) *MSPSerial {
-	p, err := serial.Open(dd.name, &serial.Mode{BaudRate: dd.param})
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &MSPSerial{klass: dd.klass, p: p}
-}
-
-func NewMSPTCP(dd DevDescription) *MSPSerial {
-	var conn net.Conn
-	remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
-	addr, err := net.ResolveTCPAddr("tcp", remote)
-	if err == nil {
-		conn, err = net.DialTCP("tcp", nil, addr)
-	}
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &MSPSerial{klass: dd.klass, conn: conn}
-}
-
-func NewMSPUDP(dd DevDescription) *MSPSerial {
-	var laddr, raddr *net.UDPAddr
-	var reader *bufio.Reader
-	var conn net.Conn
-	var err error
-
-	if dd.param1 != 0 {
-		raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name1, dd.param1))
-		laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
-	} else {
-		if dd.name == "" {
+	switch dd.klass {
+	case DevClass_SERIAL:
+		p, err := serial.Open(dd.name, &serial.Mode{BaudRate: dd.param})
+		if err != nil {
+			log.Fatal(err)
+		}
+		return &MSPSerial{klass: dd.klass, p: p}
+	case DevClass_BT:
+		fd := Connect_bt(dd.name)
+		return &MSPSerial{klass: dd.klass, fd: fd}
+	case DevClass_TCP:
+		var conn net.Conn
+		remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
+		addr, err := net.ResolveTCPAddr("tcp", remote)
+		if err == nil {
+			conn, err = net.DialTCP("tcp", nil, addr)
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		return &MSPSerial{klass: dd.klass, conn: conn}
+	case DevClass_UDP:
+		var laddr, raddr *net.UDPAddr
+		var reader *bufio.Reader
+		var conn net.Conn
+		var err error
+		if dd.param1 != 0 {
+			raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name1, dd.param1))
 			laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
 		} else {
-			raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+			if dd.name == "" {
+				laddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+			} else {
+				raddr, err = net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", dd.name, dd.param))
+			}
 		}
-	}
-	if err == nil {
-		conn, err = net.DialUDP("udp", laddr, raddr)
 		if err == nil {
-			reader = bufio.NewReader(conn)
+			conn, err = net.DialUDP("udp", laddr, raddr)
+			if err == nil {
+				reader = bufio.NewReader(conn)
+			}
 		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		return &MSPSerial{klass: dd.klass, conn: conn, reader: reader}
+	default:
+		fmt.Fprintln(os.Stderr, "Unsupported device")
+		os.Exit(1)
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &MSPSerial{klass: dd.klass, conn: conn, reader: reader}
+	return nil
 }
 
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
@@ -252,18 +264,7 @@ func (m *MSPSerial) Wait_msp(cmd byte, payload []byte) MsgData {
 
 func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
-	var m *MSPSerial
-	switch dd.klass {
-	case DevClass_SERIAL:
-		m = NewMSPSerial(dd)
-	case DevClass_TCP:
-		m = NewMSPTCP(dd)
-	case DevClass_UDP:
-		m = NewMSPUDP(dd)
-	default:
-		fmt.Fprintln(os.Stderr, "Unsupported device")
-		os.Exit(1)
-	}
+	m := NewMSPSerial(dd)
 
 	m.c0 = make(chan MsgData)
 	go m.Read_msp(m.c0)

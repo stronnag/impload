@@ -16,6 +16,7 @@ const (
 	DevClass_SERIAL
 	DevClass_TCP
 	DevClass_UDP
+	DevClass_BT
 )
 
 type DevDescription struct {
@@ -148,6 +149,9 @@ func parse_device() DevDescription {
 		// These are only used for ESP8266 UDP
 		dd.name1 = m[0][4]
 		dd.param1, _ = strconv.Atoi(m[0][5])
+	} else if len(*device) == 17 && (*device)[2] == ':' && (*device)[8] == ':' && (*device)[14] == ':' {
+		dd.name = *device
+		dd.klass = DevClass_BT
 	} else {
 		ss := strings.Split(*device, "@")
 		dd.klass = DevClass_SERIAL

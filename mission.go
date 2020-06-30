@@ -14,6 +14,7 @@ import (
 	"github.com/beevik/etree"
 	"archive/zip"
 	"encoding/json"
+	"path"
 )
 
 type QGCrec struct {
@@ -154,7 +155,7 @@ func (m *Mission) Dump(params ...string) {
 		if params[1] == "-" {
 			sb.WriteString("<stdin>")
 		} else {
-			sb.WriteString(params[1])
+			sb.WriteString(path.Base(params[1]))
 		}
 		if len(params) > 2 {
 			sb.WriteString(" (")

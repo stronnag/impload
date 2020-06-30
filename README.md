@@ -12,7 +12,7 @@ impload - iNav Mission Plan uploader
 * Plain, simple CSV files
 * [mwp JSON](https://github.com/stronnag/mwptools/blob/master/samples/mission-schema.json) mission files
 
-Serial devices and TCP are supported
+Serial devices and TCP are supported for upload / download to / from flight controllers.
 
 Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/impload-User-Guide) for more information and CSV format
 
