@@ -37,12 +37,13 @@ Usage of ./impload [options] command [files ...]
 
 ## Device Name
 
-impload supports a subset of the mwp device naming scheme:
+impload supports the mwp device naming scheme:
 
 * `serial_device[@baudrate]`
 * `tcp://host:port`
 * `udp://remotehost:remote_port`
 * `udp://local_host:local_port/remote_host:remote_port`
+* `xx:xx:xx:xx:xx:xx` (raw BT socket, Linux only)
 
 The baud rate given as an extended device name is preferred to -b
 
@@ -57,6 +58,7 @@ COM17@115200
 tcp://esp8266:23
 udp://:14014/esp-air:14014
 # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
+30:14:12:02:16:64
 ```
 
 ## Use Cases
