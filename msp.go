@@ -60,7 +60,7 @@ type MSPSerial struct {
 	p      serial.Port
 	conn   net.Conn
 	reader *bufio.Reader
-	fd     int
+	bt     *BTConn
 	c0     chan MsgData
 }
 
@@ -95,7 +95,7 @@ func (m *MSPSerial) read(inp []byte) (int, error) {
 	case DevClass_UDP:
 		return m.reader.Read(inp)
 	case DevClass_BT:
-		return Read_bt(m.fd, inp)
+		return m.bt.Read(inp)
 	}
 	return -1, nil
 }
@@ -105,7 +105,7 @@ func (m *MSPSerial) write(payload []byte) (int, error) {
 	case DevClass_SERIAL:
 		return m.p.Write(payload)
 	case DevClass_BT:
-		return Write_bt(m.fd, payload)
+		return m.bt.Write(payload)
 	default:
 		return m.conn.Write(payload)
 	}
@@ -196,8 +196,8 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		}
 		return &MSPSerial{klass: dd.klass, p: p}
 	case DevClass_BT:
-		fd := Connect_bt(dd.name)
-		return &MSPSerial{klass: dd.klass, fd: fd}
+		bt := NewBT(dd.name)
+		return &MSPSerial{klass: dd.klass, bt: bt}
 	case DevClass_TCP:
 		var conn net.Conn
 		remote := fmt.Sprintf("%s:%d", dd.name, dd.param)

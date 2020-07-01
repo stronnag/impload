@@ -8,6 +8,10 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+type BTConn struct {
+	fd int
+}
+
 func str2ba(addr string) [6]byte {
 	a := strings.Split(addr, ":")
 	var b [6]byte
@@ -24,28 +28,30 @@ func check(err error) {
 	}
 }
 
-func Connect_bt(id string) int {
+func NewBT(id string) *BTConn {
 	mac := str2ba(id)
+	bt := &BTConn{fd: -1}
 	fd, err := unix.Socket(syscall.AF_BLUETOOTH, syscall.SOCK_STREAM, unix.BTPROTO_RFCOMM)
 	check(err)
+	bt.fd = fd
 	addr := &unix.SockaddrRFCOMM{Addr: mac, Channel: 1}
-	err = unix.Connect(fd, addr)
+	err = unix.Connect(bt.fd, addr)
 	check(err)
-	return fd
+	return bt
 }
 
-func Read_bt(fd int, buf []byte) (int, error) {
-	n, err := unix.Read(fd, buf)
+func (bt *BTConn) Read(buf []byte) (int, error) {
+	n, err := unix.Read(bt.fd, buf)
 	return n, err
 }
 
-func Write_bt(fd int, buf []byte) (int, error) {
-	n, err := unix.Write(fd, buf)
+func (bt *BTConn) Write(buf []byte) (int, error) {
+	n, err := unix.Write(bt.fd, buf)
 	return n, err
 }
 
-func Close_bt(fd int) {
-	unix.Close(fd)
+func (bt *BTConn) Close() {
+	unix.Close(bt.fd)
 }
 
 /**

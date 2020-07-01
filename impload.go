@@ -169,8 +169,9 @@ func main() {
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of impload [options] command [files ...]\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "  command\n\tAction required (upload|download|store|restore|convert|test)\n\n")
+		fmt.Fprintf(os.Stderr, "  command:\n\tAction required (upload|download|store|restore|convert|test)\n\n")
 		fmt.Fprintln(os.Stderr, GetVersion())
 	}
 
@@ -183,7 +184,8 @@ func main() {
 
 	files := flag.Args()
 	if len(files) == 0 {
-		log.Fatal("No command given")
+		flag.Usage()
+		os.Exit(-1)
 	}
 
 	inf, outf := verify_in_out_files(files[1:])

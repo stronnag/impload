@@ -7,17 +7,21 @@ import (
 	"errors"
 )
 
-func Connect_bt(id string) int {
+type BTConn struct {
+	fd int
+}
+
+func NewBT(id string) *BTConn {
 	log.Fatal("BT sockets are Linux only")
-	return -1
+	return &BTConn{-1}
 }
 
-func Read_bt(fd int, buf []byte) (int, error) {
+func (bt *BTConn) Read(buf []byte) (int, error) {
 	return -1, errors.New("Unsupported OS")
 }
 
-func Write_bt(fd int, buf []byte) (int, error) {
+func (bt *BTConn) Write(buf []byte) (int, error) {
 	return -1, errors.New("Unsupported OS")
 }
-func Close_bt(fd int) {
+func (bt *BTConn) Close() {
 }
