@@ -32,7 +32,7 @@ Usage of ./impload [options] command [files ...]
   -s int
     	Default speed (m/s)
   command
-	Action required (upload|download|store|restore|convert|test)
+	Action required (upload|download|store|restore|convert|test|clear|erase)
 ```
 
 ## Device Name
@@ -74,6 +74,17 @@ udp://:14014/esp-air:14014
 Binaries in the Release area (linux ia32/x86_64/arm7, FreeBSD, MacOS, Win32) if you don't want it build it locally.
 
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
+
+## Command summary
+
+* upload : upload mission to FC volatile memory
+* store : upload mission to FC volatile memory and stores in EEPROM
+* download : downloads mission from FC volatile memory
+* restore : restores mission from EEROM to FC volatile memory and downloads the mission
+* convert : converts alien formats to MW-XML
+* test : tests communications with FC
+* clear : clear mission in volatile RAM (specifically, uploads a mission with just a single RTH WP, which is always safe).
+* erase : erases mission in EEPROM and clears mission in volatile RAM (specifically, uploads and stores a mission with just a single RTH WP, which is always safe).
 
 ## Examples
 

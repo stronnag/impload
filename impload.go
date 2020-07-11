@@ -79,6 +79,16 @@ func sanitise_mission(m *Mission, mtype string) {
 	}
 }
 
+func do_clear(eeprom bool) {
+	devdesc := check_device()
+	s := MSPInit(devdesc)
+	items := []MissionItem{}
+	m := &Mission{GetVersion(), items}
+	item := MissionItem{No: 1, Lat: 0.0, Lon: 0.0, Alt: int32(25), Action: "RTH"}
+	m.MissionItems = append(m.MissionItems, item)
+	s.upload(m, eeprom)
+}
+
 func do_upload(inf string, eeprom bool) {
 	devdesc := check_device()
 	s := MSPInit(devdesc)
@@ -171,7 +181,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage of impload [options] command [files ...]\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "  command:\n\tAction required (upload|download|store|restore|convert|test)\n\n")
+		fmt.Fprintf(os.Stderr, "  command:\n\tAction required (upload|download|store|restore|convert|test|clear|erase)\n\n")
 		fmt.Fprintln(os.Stderr, GetVersion())
 	}
 
@@ -206,6 +216,8 @@ func main() {
 		do_upload(inf, true)
 	case "restore", "rest":
 		do_download(inf, true)
+	case "clear", "erase":
+		do_clear(files[0] == "erase")
 	case "version":
 		fmt.Fprintln(os.Stderr, GetVersion())
 	default:

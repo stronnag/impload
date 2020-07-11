@@ -53,25 +53,3 @@ func (bt *BTConn) Write(buf []byte) (int, error) {
 func (bt *BTConn) Close() {
 	unix.Close(bt.fd)
 }
-
-/**
-func main() {
-	var id string
-	if len(os.Args) > 1 {
-		id = os.Args[1]
-	} else {
-		log.Fatal("no device given")
-	}
-	fd := Connect_bt(id)
-	defer Close_bt(fd)
-
-	var buf = make([]byte, 128)
-	for {
-		n, err := Read_bt(fd, buf)
-		check(err)
-		if n > 0 {
-			fmt.Printf("Received: %v\n", string(buf[0:n]))
-		}
-	}
-}
-**/
