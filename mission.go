@@ -264,11 +264,11 @@ func read_simple(dat []byte) *Mission {
 			p2 = int16(fp2)
 		case "LAND":
 			if fp1 > 0 {
-				p1 = int16(fp1)
+				p1 = int16(fp1 * 100)
 			}
 		case "SET_POI":
 		case "SET_HEAD":
-			p1 = int16(fp1 * 100)
+			p1 = int16(fp1)
 		default:
 			continue
 		}
