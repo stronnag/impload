@@ -100,6 +100,17 @@ func (m *MSPSerial) read(inp []byte) (int, error) {
 	return -1, nil
 }
 
+func (m *MSPSerial) close() {
+	switch m.klass {
+	case DevClass_SERIAL:
+		m.p.Close()
+	case DevClass_BT:
+		m.bt.Close()
+	default:
+		m.conn.Close()
+	}
+}
+
 func (m *MSPSerial) write(payload []byte) (int, error) {
 	switch m.klass {
 	case DevClass_SERIAL:
@@ -123,7 +134,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 
 	for {
 		nb, err := m.read(inp)
-		if err == nil {
+		if err == nil && nb > 0 {
 			for i := 0; i < nb; i++ {
 				switch n {
 				case state_INIT:
@@ -182,7 +193,13 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 				}
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "Read err\n")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Read %v\n", err)
+			} else {
+				fmt.Fprintln(os.Stderr, "serial EOF")
+			}
+			m.close()
+			os.Exit(2)
 		}
 	}
 }

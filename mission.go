@@ -266,6 +266,9 @@ func read_simple(dat []byte) *Mission {
 			if fp1 > 0 {
 				p1 = int16(fp1 * 100)
 			}
+		case "SET_POI":
+		case "SET_HEAD":
+			p1 = int16(fp1 * 100)
 		default:
 			continue
 		}
