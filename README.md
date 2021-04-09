@@ -16,6 +16,8 @@ Serial devices and TCP are supported for upload / download to / from flight cont
 
 Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/impload-User-Guide) for more information and CSV format
 
+[YouTube Tutorial](https://www.youtube.com/watch?v=Mktmk_Y6PhM)
+
 ```
 $ ./impload --help
 Usage of ./impload [options] command [files ...]
