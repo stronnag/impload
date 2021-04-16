@@ -360,7 +360,7 @@ func Decode_action(b byte) string {
 	return a
 }
 
-func encode_action(a string) byte {
+func Encode_action(a string) byte {
 	var b byte
 	switch a {
 	case "WAYPOINT":
@@ -388,7 +388,7 @@ func encode_action(a string) byte {
 func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	buf := make([]byte, 32)
 	buf[0] = byte(mi.No)
-	buf[1] = encode_action(mi.Action)
+	buf[1] = Encode_action(mi.Action)
 	v := int32(mi.Lat * 1e7)
 	binary.LittleEndian.PutUint32(buf[2:6], uint32(v))
 	v = int32(mi.Lon * 1e7)

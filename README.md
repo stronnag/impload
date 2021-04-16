@@ -10,7 +10,8 @@ impload - iNav Mission Plan uploader
 * GPX files (tracks, routes, waypoints)
 * KML, KMZ files
 * Plain, simple CSV files
-* [mwp JSON](https://github.com/stronnag/mwptools/blob/master/samples/mission-schema.json) mission files
+* [mwp JSON](https://github.com/stronnag/mwptools/blob/master/samples/mission-schema.json) mission files]
+* inav cli `wp` stanzas
 
 Serial devices and TCP are supported for upload / download to / from flight controllers.
 
@@ -19,21 +20,25 @@ Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/imploa
 [YouTube Tutorial](https://www.youtube.com/watch?v=Mktmk_Y6PhM)
 
 ```
-$ ./impload --help
-Usage of ./impload [options] command [files ...]
+$ impload --help
+Usage of impload [options] command [files ...]
+Options:
   -a int
     	Default altitude (m) (default 20)
   -b int
     	Baud rate (default 115200)
   -d string
-    	Device name
+    	Serial Device
+  -fmt string
+    	Output format (xml, json, cli) (default "xml")
   -force-land
     	Adds RTH / Land for 'external' formats
   -force-rth
     	Adds RTH for 'external' formats
-  -s int
+  -s float
     	Default speed (m/s)
-  command
+  -v	Shows version
+  command:
 	Action required (upload|download|store|restore|convert|test|clear|erase)
 ```
 
@@ -83,7 +88,7 @@ From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, s
 * store : upload mission to FC volatile memory and stores in EEPROM
 * download : downloads mission from FC volatile memory
 * restore : restores mission from EEROM to FC volatile memory and downloads the mission
-* convert : converts alien formats to MW-XML
+* convert : converts alien formats to MW-XML (default), or the format defined by the `-fmt` option.
 * test : tests communications with FC
 * clear : clear mission in volatile RAM (specifically, uploads a mission with just a single RTH WP, which is always safe).
 * erase : erases mission in EEPROM and clears mission in volatile RAM (specifically, uploads and stores a mission with just a single RTH WP, which is always safe).

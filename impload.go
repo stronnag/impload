@@ -6,10 +6,9 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
-
 
 const (
 	DevClass_NONE = iota
@@ -35,8 +34,8 @@ var (
 	force_rtl  = flag.Bool("force-rth", false, "Adds RTH for 'external' formats")
 	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
 	show_vers  = flag.Bool("v", false, "Shows version")
+	outfmt     = flag.String("fmt", "xml", "Output format (xml, json, cli)")
 )
-
 
 var GitCommit = "local"
 var GitTag = "0.0.0"
@@ -54,7 +53,7 @@ func do_convert(inf string, outf string) {
 	mtype, m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
 		sanitise_mission(m, mtype)
-		m.Dump(outf, inf, mtype)
+		m.Dump(*outfmt, outf, inf, mtype)
 	} else {
 		log.Fatal("Invalid input file\n")
 	}
@@ -105,7 +104,7 @@ func do_download(outf string, eeprom bool) {
 	devdesc := check_device()
 	s := MSPInit(devdesc)
 	m := s.download(eeprom)
-	m.Dump(outf)
+	m.Dump(*outfmt, outf)
 }
 
 func verify_in_out_files(files []string) (string, string) {

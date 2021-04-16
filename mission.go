@@ -27,18 +27,18 @@ type QGCrec struct {
 }
 
 type MissionItem struct {
-	No     int
-	Action string
-	Lat    float64
-	Lon    float64
-	Alt    int32
-	P1     int16
-	P2     int16
-	P3     uint16
+	No     int     `json:"no"`
+	Action string  `json:"action"`
+	Lat    float64 `json:"lat"`
+	Lon    float64 `json:"lon"`
+	Alt    int32   `json:"alt"`
+	P1     int16   `json:"p1"`
+	P2     int16   `json:"p2"`
+	P3     uint16  `json:"p3"`
 }
 
 type Mission struct {
-	Version      string
+	Version string
 	MissionItems []MissionItem
 }
 
@@ -139,7 +139,18 @@ func (m *Mission) Add_rtl(land bool) {
 	m.MissionItems = append(m.MissionItems, item)
 }
 
-func (m *Mission) Dump(params ...string) {
+func (m *Mission) Dump(outfmt string, params ...string) {
+	switch outfmt {
+	case "cli":
+		m.To_cli(params[0])
+	case "json":
+		m.To_json(params[0])
+	default:
+		m.To_xml(params...)
+	}
+}
+
+func (m *Mission) To_xml(params ...string) {
 	t := time.Now()
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="utf-8"`)
@@ -579,6 +590,41 @@ func read_json(dat []byte) *Mission {
 	return mission
 }
 
+func read_inav_cli(dat []byte) *Mission {
+	items := []MissionItem{}
+	mission := &Mission{"impload", items}
+	for _, ln := range strings.Split(string(dat), "\n") {
+		if strings.HasPrefix(ln, "wp ") {
+			parts := strings.Split(ln, " ")
+			if len(parts) == 10 {
+				no, _ := strconv.Atoi(parts[1])
+				iact, _ := strconv.Atoi(parts[2])
+				ilat, _ := strconv.Atoi(parts[3])
+				ilon, _ := strconv.Atoi(parts[4])
+				alt, _ := strconv.Atoi(parts[5])
+				p1, _ := strconv.Atoi(parts[6])
+				p2, _ := strconv.Atoi(parts[7])
+				p3, _ := strconv.Atoi(parts[8])
+				flg, _ := strconv.Atoi(parts[9])
+				lat := float64(ilat) / 1.0e7
+				lon := float64(ilon) / 1.0e7
+				action := Decode_action(byte(iact))
+				if iact == 6 {
+					p1 += 1
+				}
+				no += 1
+				alt /= 100
+				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), uint16(p3)}
+				mission.MissionItems = append(mission.MissionItems, item)
+				if flg == 0xa5 {
+					break
+				}
+			}
+		}
+	}
+	return mission
+}
+
 func Read_Mission_File(path string) (string, *Mission, error) {
 	var dat []byte
 	r, err := openStdinOrFile(path)
@@ -631,6 +677,9 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 	case bytes.Contains(dat[0:100], []byte("\"fileType\": \"Plan\"")):
 		mtype = "qgc-json"
 		m = process_qgc(dat, mtype)
+	case bytes.HasPrefix(dat, []byte("# wp")), bytes.HasPrefix(dat, []byte("#wp")), bytes.HasPrefix(dat, []byte("wp 0")):
+		mtype = "inav cli"
+		m = read_inav_cli(dat)
 	default:
 		m = nil
 	}
