@@ -81,8 +81,8 @@ func sanitise_mission(m *Mission, mtype string) {
 func do_clear(eeprom bool) {
 	devdesc := check_device()
 	s := MSPInit(devdesc)
-	items := []MissionItem{}
-	m := &Mission{GetVersion(), items}
+	m := &Mission{}
+	m.Version = GetVersion()
 	item := MissionItem{No: 1, Lat: 0.0, Lon: 0.0, Alt: int32(25), Action: "RTH"}
 	m.MissionItems = append(m.MissionItems, item)
 	s.upload(m, eeprom)

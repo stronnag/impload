@@ -37,16 +37,23 @@ type MissionItem struct {
 	P3     uint16  `json:"p3"`
 }
 
+type MissionMWP struct {
+	Zoom int
+	Cx float64
+	Cy float64
+	Stamp time.Time
+}
+
 type Mission struct {
 	Version string
+	MwpMeta  MissionMWP
 	MissionItems []MissionItem
 }
 
 func read_kml(dat []byte) *Mission {
 
-	items := []MissionItem{}
-	mission := &Mission{GetVersion(), items}
-
+	mission := &Mission{}
+	//	items := []MissionItem{}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromBytes(dat); err == nil {
 		root := doc.SelectElement("kml")
@@ -80,7 +87,7 @@ func read_kml(dat []byte) *Mission {
 
 func read_gpx(dat []byte) *Mission {
 	items := []MissionItem{}
-	mission := &Mission{GetVersion(), items}
+	mission := &Mission{GetVersion(), MissionMWP{}, items}
 	stypes := []string{"//trkpt", "//rtept", "//wpt"}
 
 	doc := etree.NewDocument()
@@ -103,6 +110,11 @@ func read_gpx(dat []byte) *Mission {
 		}
 	}
 	return mission
+}
+
+func (mi *MissionItem) is_GeoPoint() bool {
+	a := mi.Action
+	return !(a == "RTH" || a == "SET_HEAD" || a == "JUMP")
 }
 
 func (m *Mission) is_valid() bool {
@@ -178,6 +190,14 @@ func (m *Mission) To_xml(params ...string) {
 	x.CreateComment(sb.String())
 	v := x.CreateElement("version")
 	v.CreateAttr("value", m.Version)
+
+	md := m.Get_mission_meta()
+	v = x.CreateElement("mwp")
+	v.CreateAttr("save-date", md.Stamp.Format(time.RFC3339))
+	v.CreateAttr("cx", fmt.Sprintf("%.7f", md.Cx))
+	v.CreateAttr("cy", fmt.Sprintf("%.7f", md.Cy))
+	v.CreateAttr("zoom", fmt.Sprintf("%d", md.Zoom))
+
 	for _, mi := range m.MissionItems {
 		xi := x.CreateElement("missionitem")
 		xi.CreateAttr("no", fmt.Sprintf("%d", mi.No))
@@ -199,8 +219,7 @@ func (m *Mission) To_xml(params ...string) {
 func read_simple(dat []byte) *Mission {
 	r := csv.NewReader(strings.NewReader(string(dat)))
 
-	items := []MissionItem{}
-	mission := &Mission{GetVersion(), items}
+	mission := &Mission{GetVersion(), MissionMWP{}, []MissionItem{}}
 
 	n := 1
 	has_no := false
@@ -387,8 +406,7 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 
 func process_qgc(dat []byte, mtype string) *Mission {
 	var qs []QGCrec
-	items := []MissionItem{}
-	mission := &Mission{GetVersion(), items}
+	mission := &Mission{GetVersion(), MissionMWP{},[]MissionItem{}}
 
 	if mtype == "qgc-text" {
 		qs = read_qgc_text(dat)
@@ -517,8 +535,7 @@ func process_qgc(dat []byte, mtype string) *Mission {
 }
 
 func read_xml_mission(dat []byte) *Mission {
-	items := []MissionItem{}
-	mission := &Mission{"impload", items}
+	mission := &Mission{"impload", MissionMWP{}, []MissionItem{}}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromBytes(dat); err == nil {
 		for _, root := range doc.ChildElements() {
@@ -530,6 +547,10 @@ func read_xml_mission(dat []byte) *Mission {
 						if version != "" {
 							mission.Version = version
 						}
+					case strings.EqualFold(el.Tag, "mwp"):
+						mission.MwpMeta.Zoom, _ = strconv.Atoi(el.SelectAttrValue("zoom", "0"))
+						mission.MwpMeta.Cx,_ = strconv.ParseFloat(el.SelectAttrValue("cx", "0"), 64)
+						mission.MwpMeta.Cy,_ = strconv.ParseFloat(el.SelectAttrValue("cy", "0"), 64)
 					case strings.EqualFold(el.Tag, "MISSIONITEM"):
 						no, _ := strconv.Atoi(el.SelectAttrValue("no", "0"))
 						action := el.SelectAttrValue("action", "WAYPOINT")
@@ -574,8 +595,7 @@ func read_kmz(path string) (string, *Mission) {
 }
 
 func read_json(dat []byte) *Mission {
-	items := []MissionItem{}
-	mission := &Mission{"impload", items}
+	mission := &Mission{"impload", MissionMWP{}, []MissionItem{}}
 	var result map[string]interface{}
 	json.Unmarshal(dat, &result)
 	mi := result["mission"].([]interface{})
@@ -591,8 +611,7 @@ func read_json(dat []byte) *Mission {
 }
 
 func read_inav_cli(dat []byte) *Mission {
-	items := []MissionItem{}
-	mission := &Mission{"impload", items}
+	mission := &Mission{"impload", MissionMWP{}, []MissionItem{}}
 	for _, ln := range strings.Split(string(dat), "\n") {
 		if strings.HasPrefix(ln, "wp ") {
 			parts := strings.Split(ln, " ")
