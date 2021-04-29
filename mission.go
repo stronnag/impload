@@ -34,7 +34,7 @@ type MissionItem struct {
 	Alt    int32   `json:"alt"`
 	P1     int16   `json:"p1"`
 	P2     int16   `json:"p2"`
-	P3     uint16  `json:"p3"`
+	P3     int16  `json:"p3"`
 }
 
 type MissionMWP struct {
@@ -376,7 +376,7 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 				jumptgt := mission.MissionItems[i].P1
 				ajump := int16(0)
 				for j := 0; j < len(mission.MissionItems); j++ {
-					if mission.MissionItems[j].P3 == uint16(jumptgt) {
+					if mission.MissionItems[j].P3 == int16(jumptgt) {
 						ajump = int16(j + 1)
 						break
 					}
@@ -517,7 +517,7 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			last_alt = q.alt
 			last_lat = q.lat
 			last_lon = q.lon
-			p3 := uint16(q.jindex)
+			p3 := int16(q.jindex)
 			no += 1
 			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
 			mission.MissionItems = append(mission.MissionItems, item)
@@ -560,7 +560,7 @@ func read_xml_mission(dat []byte) *Mission {
 						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1", "0"))
 						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2", "0"))
 						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3", "0"))
-						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), uint16(p3)}
+						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3)}
 						mission.MissionItems = append(mission.MissionItems, item)
 					default:
 						// fmt.Printf("ignoring tag %s\n", el.Tag)
@@ -604,7 +604,7 @@ func read_json(dat []byte) *Mission {
 		item := MissionItem{int(ll["no"].(float64)), ll["action"].(string),
 			ll["lat"].(float64), ll["lon"].(float64),
 			int32(ll["alt"].(float64)), int16(ll["p1"].(float64)),
-			int16(ll["p2"].(float64)), uint16(ll["p3"].(float64))}
+			int16(ll["p2"].(float64)), int16(ll["p3"].(float64))}
 		mission.MissionItems = append(mission.MissionItems, item)
 	}
 	return mission
@@ -633,7 +633,7 @@ func read_inav_cli(dat []byte) *Mission {
 				}
 				no += 1
 				alt /= 100
-				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), uint16(p3)}
+				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3)}
 				mission.MissionItems = append(mission.MissionItems, item)
 				if flg == 0xa5 {
 					break

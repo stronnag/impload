@@ -431,8 +431,7 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 func deserialise_wp(b []byte) (bool, MissionItem) {
 	var lat, lon float64
 	var action string
-	var p1, p2 int16
-	var p3 uint16
+	var p1, p2, p3 int16
 	var v, alt int32
 
 	action = Decode_action(b[1])
@@ -443,7 +442,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	alt = int32(binary.LittleEndian.Uint32(b[10:14])) / 100
 	p1 = int16(binary.LittleEndian.Uint16(b[14:16]))
 	p2 = int16(binary.LittleEndian.Uint16(b[16:18]))
-	p3 = binary.LittleEndian.Uint16(b[18:20])
+	p3 = int16(binary.LittleEndian.Uint16(b[18:20]))
 	last := (b[20] == 0xa5)
 	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3}
 	return last, item

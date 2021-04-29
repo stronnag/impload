@@ -45,6 +45,10 @@ func evince_zoom(bbox BBox) int {
 		z = 16
 	case drng < 1920:
 		z = 15
+	case drng < 3840:
+		z = 14
+	case drng < 7680:
+		z = 14
 	}
 	return z
 }
