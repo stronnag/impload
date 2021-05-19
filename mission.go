@@ -463,7 +463,7 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			action = "RTH"
 			q.lat = 0.0
 			q.lon = 0.0
-			if q.alt == 0 || have_land {
+			if /*q.alt == 0 ||*/ have_land {
 				p1 = 1
 			}
 			q.alt = 0
