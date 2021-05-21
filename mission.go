@@ -37,8 +37,19 @@ type qgc_plan struct {
 			Jumpid      int       `json:"doJumpId"`
 			Frame       int       `json:"frame"`
 			Params      []float64 `json:"params"`
-		}
-	}
+			Transect    struct {
+				Items []struct {
+					Typ         string    `json:"type"`
+					Altitude    int       `json:"Altitude"`
+					Alitudemode int       `json:"AltitudeMode"`
+					Command     int       `json:"command"`
+					Jumpid      int       `json:"doJumpId"`
+					Frame       int       `json:"frame"`
+					Params      []float64 `json:"params"`
+				} `json:"items"`
+			} `json:"TransectStyleComplexItem,omitempty"`
+		} `json:"items"`
+	} `json:"mission"`
 }
 
 type MissionItem struct {
@@ -329,20 +340,35 @@ func read_qgc_json(dat []byte) []QGCrec {
   var qm qgc_plan
 	json.Unmarshal(dat, &qm)
 	if qm.Filetype == "Plan" {
-		for _,qmi := range qm.Mission.Items {
+		for _, qmi := range qm.Mission.Items {
 			if qmi.Typ == "SimpleItem" {
-				qg := QGCrec{}
-				qg.jindex = qmi.Jumpid
-				qg.command = qmi.Command
-				qg.lat = qmi.Params[4]
-				qg.lon = qmi.Params[5]
-				qg.alt = qmi.Params[6]
-				for j := 0; j < 4; j++ {
+				if len(qmi.Params) == 7 {
+					qg := QGCrec{}
+					qg.jindex = qmi.Jumpid
+					qg.command = qmi.Command
+					qg.lat = qmi.Params[4]
+					qg.lon = qmi.Params[5]
+					qg.alt = qmi.Params[6]
+					for j := 0; j < 4; j++ {
 						qg.params[j] = qmi.Params[j]
 					}
-				qgcs = append(qgcs, qg)
-			} else {
-				fmt.Fprintln(os.Stderr, "Skipping non-SimpleItem element");
+					qgcs = append(qgcs, qg)
+				}
+			} else if qmi.Typ == "ComplexItem" {
+				for _, qmii := range qmi.Transect.Items {
+					if len(qmii.Params) == 7 {
+						qg := QGCrec{}
+						qg.jindex = qmii.Jumpid
+						qg.command = qmii.Command
+						qg.lat = qmii.Params[4]
+						qg.lon = qmii.Params[5]
+						qg.alt = qmii.Params[6]
+						for j := 0; j < 4; j++ {
+							qg.params[j] = qmii.Params[j]
+						}
+						qgcs = append(qgcs, qg)
+					}
+				}
 			}
 		}
 	} else {
