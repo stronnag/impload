@@ -26,6 +26,21 @@ type QGCrec struct {
 	params  [4]float64
 }
 
+type qgc_plan struct {
+	Filetype string `json:"fileType"`
+	Mission  struct {
+		Items []struct {
+			Typ         string    `json:"type"`
+			Altitude    int       `json:"Altitude"`
+			Alitudemode int       `json:"AltitudeMode"`
+			Command     int       `json:"command"`
+			Jumpid      int       `json:"doJumpId"`
+			Frame       int       `json:"frame"`
+			Params      []float64 `json:"params"`
+		}
+	}
+}
+
 type MissionItem struct {
 	No     int     `json:"no"`
 	Action string  `json:"action"`
@@ -311,28 +326,27 @@ func read_simple(dat []byte) *Mission {
 
 func read_qgc_json(dat []byte) []QGCrec {
 	qgcs := []QGCrec{}
-	var result map[string]interface{}
-
-	json.Unmarshal(dat, &result)
-	mi := result["mission"].(interface{})
-	mid := mi.(map[string]interface{})
-	it := mid["items"].([]interface{})
-
-	for _, l := range it {
-		ll := l.(map[string]interface{})
-		ps := ll["params"].([]interface{})
-		qg := QGCrec{}
-		qg.jindex = int(ll["doJumpId"].(float64))
-		qg.command = int(ll["command"].(float64))
-		qg.lat = ps[4].(float64)
-		qg.lon = ps[5].(float64)
-		qg.alt = ps[6].(float64)
-		for j := 0; j < 4; j++ {
-			if ps[j] != nil {
-				qg.params[j] = ps[j].(float64)
+  var qm qgc_plan
+	json.Unmarshal(dat, &qm)
+	if qm.Filetype == "Plan" {
+		for _,qmi := range qm.Mission.Items {
+			if qmi.Typ == "SimpleItem" {
+				qg := QGCrec{}
+				qg.jindex = qmi.Jumpid
+				qg.command = qmi.Command
+				qg.lat = qmi.Params[4]
+				qg.lon = qmi.Params[5]
+				qg.alt = qmi.Params[6]
+				for j := 0; j < 4; j++ {
+						qg.params[j] = qmi.Params[j]
+					}
+				qgcs = append(qgcs, qg)
+			} else {
+				fmt.Fprintln(os.Stderr, "Skipping non-SimpleItem element");
 			}
 		}
-		qgcs = append(qgcs, qg)
+	} else {
+		fmt.Fprintln(os.Stderr, "Skipping non-Plan file");
 	}
 	return qgcs
 }
