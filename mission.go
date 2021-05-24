@@ -20,6 +20,7 @@ import (
 type QGCrec struct {
 	jindex  int
 	command int
+	altmode int
 	lat     float64
 	lon     float64
 	alt     float64
@@ -32,7 +33,7 @@ type qgc_plan struct {
 		Items []struct {
 			Typ         string    `json:"type"`
 			Altitude    int       `json:"Altitude"`
-			Alitudemode int       `json:"AltitudeMode"`
+			Altitudemode int       `json:"AltitudeMode"`
 			Command     int       `json:"command"`
 			Jumpid      int       `json:"doJumpId"`
 			Frame       int       `json:"frame"`
@@ -345,6 +346,7 @@ func read_qgc_json(dat []byte) []QGCrec {
 				if len(qmi.Params) == 7 {
 					qg := QGCrec{}
 					qg.jindex = qmi.Jumpid
+					qg.altmode = qmi.Altitudemode
 					qg.command = qmi.Command
 					qg.lat = qmi.Params[4]
 					qg.lon = qmi.Params[5]
@@ -560,6 +562,9 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			p3 := int16(q.jindex)
 			no += 1
 			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
+			if item.is_GeoPoint() && q.altmode == 2 { // AMSL
+				item.P3 = 1;
+			}
 			mission.MissionItems = append(mission.MissionItems, item)
 			if last {
 				break
