@@ -361,6 +361,7 @@ func read_qgc_json(dat []byte) []QGCrec {
 					if len(qmii.Params) == 7 {
 						qg := QGCrec{}
 						qg.jindex = qmii.Jumpid
+						qg.altmode = qmi.Altitudemode
 						qg.command = qmii.Command
 						qg.lat = qmii.Params[4]
 						qg.lon = qmii.Params[5]
@@ -418,7 +419,11 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 				jumptgt := mission.MissionItems[i].P1
 				ajump := int16(0)
 				for j := 0; j < len(mission.MissionItems); j++ {
-					if mission.MissionItems[j].P3 == int16(jumptgt) {
+					p3abs := mission.MissionItems[j].P3; // -ve indicate amsl
+					if p3abs < 0 {
+						p3abs *= -1
+					}
+					if p3abs == int16(jumptgt) {
 						ajump = int16(j + 1)
 						break
 					}
@@ -438,7 +443,11 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 	}
 	if ok {
 		for i := 0; i < len(mission.MissionItems); i++ {
-			mission.MissionItems[i].P3 = 0
+			if mission.MissionItems[i].P3 < 0 {
+				mission.MissionItems[i].P3 = 1
+			} else {
+				mission.MissionItems[i].P3 = 0
+			}
 		}
 		return mission, ok
 	} else {
@@ -559,11 +568,12 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			last_alt = q.alt
 			last_lat = q.lat
 			last_lon = q.lon
+			// P3 stores the original ID, which may not match No
 			p3 := int16(q.jindex)
 			no += 1
 			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
 			if item.is_GeoPoint() && q.altmode == 2 { // AMSL
-				item.P3 = 1;
+				item.P3 *= -1; // -ve P3 indicates amsl
 			}
 			mission.MissionItems = append(mission.MissionItems, item)
 			if last {
