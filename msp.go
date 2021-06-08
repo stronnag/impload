@@ -400,7 +400,7 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	if last {
 		buf[20] = 0xa5
 	} else {
-		buf[20] = 0
+		buf[20] = mi.Flag
 	}
 	return len(buf), buf
 }
@@ -444,7 +444,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	p2 = int16(binary.LittleEndian.Uint16(b[16:18]))
 	p3 = int16(binary.LittleEndian.Uint16(b[18:20]))
 	last := (b[20] == 0xa5)
-	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3}
+	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3, Flag: b[20]}
 	return last, item
 }
 

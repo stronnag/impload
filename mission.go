@@ -62,6 +62,7 @@ type MissionItem struct {
 	P1     int16   `json:"p1"`
 	P2     int16   `json:"p2"`
 	P3     int16  `json:"p3"`
+	Flag   uint8  `json:"flag,omitempty"`
 }
 
 type MissionMWP struct {
@@ -235,6 +236,10 @@ func (m *Mission) To_xml(params ...string) {
 		xi.CreateAttr("parameter1", fmt.Sprintf("%d", mi.P1))
 		xi.CreateAttr("parameter2", fmt.Sprintf("%d", mi.P2))
 		xi.CreateAttr("parameter3", fmt.Sprintf("%d", mi.P3))
+		if mi.Flag != 0 {
+			xi.CreateAttr("flag", fmt.Sprintf("%d", mi.Flag))
+		}
+
 	}
 	w, err := openStdoutOrFile(params[0])
 	if err == nil {
@@ -281,6 +286,8 @@ func read_simple(dat []byte) *Mission {
 		p1 := int16(0)
 		p2 := int16(0)
 		fp2 := 0.0
+		p3 := 0
+		flag := 0
 		lat, _ = strconv.ParseFloat(record[j+1], 64)
 		lon, _ = strconv.ParseFloat(record[j+2], 64)
 		alt, _ := strconv.ParseFloat(record[j+3], 64)
@@ -288,6 +295,13 @@ func read_simple(dat []byte) *Mission {
 		if len(record) > j+5 {
 			fp2, _ = strconv.ParseFloat(record[j+5], 64)
 		}
+		if len(record) > j+6 {
+			p3, _ = strconv.Atoi(record[j+6])
+		}
+		if len(record) > j+7 {
+			flag, _ = strconv.Atoi(record[j+7])
+		}
+
 		var action string
 
 		iaction, err := strconv.Atoi(record[j])
@@ -329,7 +343,7 @@ func read_simple(dat []byte) *Mission {
 		default:
 			continue
 		}
-		item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: p1, P2: p2}
+		item := MissionItem{No: no, Lat: lat, Lon: lon, Alt: int32(alt), Action: action, P1: p1, P2: p2, P3: int16(p3), Flag: uint8(flag)}
 		mission.MissionItems = append(mission.MissionItems, item)
 		n++
 	}
@@ -615,7 +629,9 @@ func read_xml_mission(dat []byte) *Mission {
 						p1, _ := strconv.Atoi(el.SelectAttrValue("parameter1", "0"))
 						p2, _ := strconv.Atoi(el.SelectAttrValue("parameter2", "0"))
 						p3, _ := strconv.Atoi(el.SelectAttrValue("parameter3", "0"))
-						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3)}
+						flag, _ := strconv.Atoi(el.SelectAttrValue("flag", "0"))
+
+						item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3), uint8(flag)}
 						mission.MissionItems = append(mission.MissionItems, item)
 					default:
 						// fmt.Printf("ignoring tag %s\n", el.Tag)
@@ -659,7 +675,8 @@ func read_json(dat []byte) *Mission {
 		item := MissionItem{int(ll["no"].(float64)), ll["action"].(string),
 			ll["lat"].(float64), ll["lon"].(float64),
 			int32(ll["alt"].(float64)), int16(ll["p1"].(float64)),
-			int16(ll["p2"].(float64)), int16(ll["p3"].(float64))}
+			int16(ll["p2"].(float64)), int16(ll["p3"].(float64)),
+			uint8(ll["flag"].(float64))}
 		mission.MissionItems = append(mission.MissionItems, item)
 	}
 	return mission
@@ -688,7 +705,7 @@ func read_inav_cli(dat []byte) *Mission {
 				}
 				no += 1
 				alt /= 100
-				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3)}
+				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3),uint8(flg)}
 				mission.MissionItems = append(mission.MissionItems, item)
 				if flg == 0xa5 {
 					break
