@@ -7,4 +7,6 @@ mkrel.sh
 mkbuilds.sh
 README.pdf
 build
-.ninja.log
+.ninja_log
+/tags
+/test
