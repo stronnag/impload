@@ -3,23 +3,12 @@ package main
 import (
 	"fmt"
 	"encoding/json"
+	"encoding/xml"
 	"time"
 	"math"
+	"path"
+	"strings"
 )
-
-type MissionMeta struct {
-	Cx        float64   `json:"cx"`
-	Cy        float64   `json:"cy"`
-	Generator string    `json:"generator"`
-	Zoom      int       `json:"zoom"`
-	Stamp     time.Time `json:"save-date"`
-}
-
-
-type MetaMission struct {
-	Meta         MissionMeta   `json:"meta"`
-	MissionItems []MissionItem `json:"mission"`
-}
 
 type BBox struct {
 	lamax, lamin, lomax, lomin float64
@@ -53,10 +42,8 @@ func evince_zoom(bbox BBox) int {
 	return z
 }
 
-
-func (m *Mission) Get_mission_meta() MissionMeta {
+func (m *Mission) Update_mission_meta() {
 	var bbox = BBox{-999, 999, -999, 999}
-	mt := MissionMeta{}
 	var cx, cy, ni float64
 	for _, mi := range m.MissionItems {
 		if mi.is_GeoPoint() {
@@ -78,23 +65,54 @@ func (m *Mission) Get_mission_meta() MissionMeta {
 		}
 	}
 	if ni > 0 {
-		mt.Cx = cx / ni
-		mt.Cy = cy / ni
+		m.Metadata.Cx = cx / ni
+		m.Metadata.Cy = cy / ni
 	}
-	mt.Zoom = evince_zoom(bbox)
-	mt.Generator = "impload"
-	mt.Stamp = time.Now()
-	return mt
+	m.Metadata.Zoom = evince_zoom(bbox)
+	m.Metadata.Generator = "impload"
+	m.Metadata.Stamp = time.Now().Format(time.RFC3339)
+}
+
+func xml_comment(params []string) string {
+	var sb strings.Builder
+	sb.WriteString("Created by \"impload\" ")
+	sb.WriteString(GitTag)
+	sb.WriteString(" on ")
+	sb.WriteString(time.Now().Format(time.RFC3339))
+	if len(params) > 1 {
+		sb.WriteString("\n      from ")
+		if params[1] == "-" {
+			sb.WriteString("<stdin>")
+		} else {
+			sb.WriteString(path.Base(params[1]))
+		}
+		if len(params) > 2 {
+			sb.WriteString(" (")
+			sb.WriteString(params[2])
+			sb.WriteByte(')')
+		}
+	}
+	sb.WriteString("\n      <https://github.com/stronnag/impload>\n")
+	return sb.String()
+}
+
+func (m *Mission) To_xml(params ...string) {
+	m.Comment = xml_comment(params)
+	m.Update_mission_meta()
+	w, err := openStdoutOrFile(params[0])
+	if err == nil {
+		xs, _ := xml.MarshalIndent(m, "", " ")
+		fmt.Fprint(w, xml.Header)
+		fmt.Fprintln(w, string(xs))
+	}
 }
 
 func (m *Mission) To_json(fname string) {
 	w, err := openStdoutOrFile(fname)
 	if err == nil {
 		defer w.Close()
-		md := MetaMission{}
-		md.MissionItems = m.MissionItems
-		md.Meta = m.Get_mission_meta()
-		js, _ := json.Marshal(md)
+		m.Update_mission_meta()
+		js, _ := json.Marshal(m)
 		fmt.Fprintln(w, string(js))
 	}
 }

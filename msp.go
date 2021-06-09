@@ -416,7 +416,8 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 	var last bool
 	z := make([]byte, 1)
 	s := GetVersion()
-	mission := &Mission{s, MissionMWP{}, []MissionItem{}}
+	mission := &Mission{}
+	mission.Version.Value = s
 	for z[0] = 1; !last; z[0]++ {
 		v := m.Wait_msp(msp_WP, z)
 		if v.len > 0 {
