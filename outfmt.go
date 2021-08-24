@@ -8,6 +8,8 @@ import (
 	"math"
 	"path"
 	"strings"
+	"os"
+	"strconv"
 )
 
 type BBox struct {
@@ -45,22 +47,34 @@ func evince_zoom(bbox BBox) int {
 func (m *Mission) Update_mission_meta() {
 	var bbox = BBox{-999, 999, -999, 999}
 	var cx, cy, ni float64
-	for _, mi := range m.MissionItems {
-		if mi.is_GeoPoint() {
-			cy += mi.Lat
-			cx += mi.Lon
+	var offlat, offlon float64
+	var moving = os.Getenv("MWP_POS_OFFSET")
+	if moving != "" {
+		offsets := strings.Split(moving, ",")
+		offlat, _ = strconv.ParseFloat(offsets[0], 64)
+		offlon, _ = strconv.ParseFloat(offsets[1], 64)
+	}
+
+	for j, _ := range m.MissionItems {
+		if m.MissionItems[j].is_GeoPoint() {
+			if moving != "" {
+				m.MissionItems[j].Lat += offlat
+				m.MissionItems[j].Lon += offlon
+			}
+			cy += m.MissionItems[j].Lat
+			cx += m.MissionItems[j].Lon
 			ni += 1
-			if mi.Lat > bbox.lamax {
-				bbox.lamax = mi.Lat
+			if m.MissionItems[j].Lat > bbox.lamax {
+				bbox.lamax = m.MissionItems[j].Lat
 			}
-			if mi.Lat < bbox.lamin {
-				bbox.lamin = mi.Lat
+			if m.MissionItems[j].Lat < bbox.lamin {
+				bbox.lamin = m.MissionItems[j].Lat
 			}
-			if mi.Lon > bbox.lomax {
-				bbox.lomax = mi.Lon
+			if m.MissionItems[j].Lon > bbox.lomax {
+				bbox.lomax = m.MissionItems[j].Lon
 			}
-			if mi.Lon < bbox.lomin {
-				bbox.lomin = mi.Lon
+			if m.MissionItems[j].Lon < bbox.lomin {
+				bbox.lomin = m.MissionItems[j].Lon
 			}
 		}
 	}
