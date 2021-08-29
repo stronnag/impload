@@ -50,6 +50,7 @@ func (bt *BTConn) Write(buf []byte) (int, error) {
 	return n, err
 }
 
-func (bt *BTConn) Close() {
+func (bt *BTConn) Close() error {
 	unix.Close(bt.fd)
+	return nil
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/binary"
 	"fmt"
 	"go.bug.st/serial"
@@ -55,13 +54,16 @@ type MsgData struct {
 	data []byte
 }
 
+type SerDev interface {
+	Read(buf []byte) (int, error)
+	Write(buf []byte) (int, error)
+	Close() error
+}
+
 type MSPSerial struct {
-	klass  int
-	p      serial.Port
-	conn   net.Conn
-	reader *bufio.Reader
-	bt     *BTConn
-	c0     chan MsgData
+	klass int
+	sd    SerDev
+	c0    chan MsgData
 }
 
 func encode_msp(cmd byte, payload []byte) []byte {
@@ -86,42 +88,6 @@ func encode_msp(cmd byte, payload []byte) []byte {
 	return buf
 }
 
-func (m *MSPSerial) read(inp []byte) (int, error) {
-	switch m.klass {
-	case DevClass_SERIAL:
-		return m.p.Read(inp)
-	case DevClass_TCP:
-		return m.conn.Read(inp)
-	case DevClass_UDP:
-		return m.reader.Read(inp)
-	case DevClass_BT:
-		return m.bt.Read(inp)
-	}
-	return -1, nil
-}
-
-func (m *MSPSerial) close() {
-	switch m.klass {
-	case DevClass_SERIAL:
-		m.p.Close()
-	case DevClass_BT:
-		m.bt.Close()
-	default:
-		m.conn.Close()
-	}
-}
-
-func (m *MSPSerial) write(payload []byte) (int, error) {
-	switch m.klass {
-	case DevClass_SERIAL:
-		return m.p.Write(payload)
-	case DevClass_BT:
-		return m.bt.Write(payload)
-	default:
-		return m.conn.Write(payload)
-	}
-}
-
 func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 	inp := make([]byte, 128)
 	var count = byte(0)
@@ -133,7 +99,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 	n := state_INIT
 
 	for {
-		nb, err := m.read(inp)
+		nb, err := m.sd.Read(inp)
 		if err == nil && nb > 0 {
 			for i := 0; i < nb; i++ {
 				switch n {
@@ -198,7 +164,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 			} else {
 				fmt.Fprintln(os.Stderr, "serial EOF")
 			}
-			m.close()
+			m.sd.Close()
 			os.Exit(2)
 		}
 	}
@@ -211,10 +177,10 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return &MSPSerial{klass: dd.klass, p: p}
+		return &MSPSerial{klass: dd.klass, sd: p}
 	case DevClass_BT:
 		bt := NewBT(dd.name)
-		return &MSPSerial{klass: dd.klass, bt: bt}
+		return &MSPSerial{klass: dd.klass, sd: bt}
 	case DevClass_TCP:
 		var conn net.Conn
 		remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
@@ -225,10 +191,9 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return &MSPSerial{klass: dd.klass, conn: conn}
+		return &MSPSerial{klass: dd.klass, sd: conn}
 	case DevClass_UDP:
 		var laddr, raddr *net.UDPAddr
-		var reader *bufio.Reader
 		var conn net.Conn
 		var err error
 		if dd.param1 != 0 {
@@ -243,14 +208,11 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		}
 		if err == nil {
 			conn, err = net.DialUDP("udp", laddr, raddr)
-			if err == nil {
-				reader = bufio.NewReader(conn)
-			}
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		return &MSPSerial{klass: dd.klass, conn: conn, reader: reader}
+		return &MSPSerial{klass: dd.klass, sd: conn}
 	default:
 		fmt.Fprintln(os.Stderr, "Unsupported device")
 		os.Exit(1)
@@ -260,12 +222,12 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 
 func (m *MSPSerial) Send_msp(cmd byte, payload []byte) {
 	buf := encode_msp(cmd, payload)
-	m.write(buf)
+	m.sd.Write(buf)
 }
 
 func (m *MSPSerial) Wait_msp(cmd byte, payload []byte) MsgData {
 	buf := encode_msp(cmd, payload)
-	m.write(buf)
+	m.sd.Write(buf)
 
 	var v MsgData
 	for done := false; !done; {
