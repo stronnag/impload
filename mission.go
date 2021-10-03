@@ -574,7 +574,7 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			last_lon = q.lon
 			// P3 stores the original ID, which may not match No
 			p3 := int16(q.jindex)
-			no += 1
+			no++
 			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
 			if item.is_GeoPoint() && q.altmode == 2 { // AMSL
 				item.P3 *= -1; // -ve P3 indicates amsl
@@ -669,9 +669,9 @@ func read_inav_cli(dat []byte) *Mission {
 				lon := float64(ilon) / 1.0e7
 				action := Decode_action(byte(iact))
 				if iact == 6 {
-					p1 += 1
+					p1++
 				}
-				no += 1
+				no++
 				alt /= 100
 				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3),uint8(flg)}
 				mission.MissionItems = append(mission.MissionItems, item)

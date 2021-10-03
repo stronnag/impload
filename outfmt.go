@@ -55,7 +55,7 @@ func (m *Mission) Update_mission_meta() {
 		offlon, _ = strconv.ParseFloat(offsets[1], 64)
 	}
 
-	for j, _ := range m.MissionItems {
+	for j := range m.MissionItems {
 		if m.MissionItems[j].is_GeoPoint() {
 			if moving != "" {
 				m.MissionItems[j].Lat += offlat
@@ -63,7 +63,7 @@ func (m *Mission) Update_mission_meta() {
 			}
 			cy += m.MissionItems[j].Lat
 			cx += m.MissionItems[j].Lon
-			ni += 1
+			ni++
 			if m.MissionItems[j].Lat > bbox.lamax {
 				bbox.lamax = m.MissionItems[j].Lat
 			}
@@ -150,7 +150,7 @@ func (m *Mission) To_cli(fname string) {
 			ialt := int(mi.Alt * 100)
 			iact := Encode_action(mi.Action)
 			if iact == 6 {
-				mi.P1 -= 1
+				mi.P1--
 			}
 			fmt.Fprintf(w, "wp %d %d %d %d %d %d %d %d %d\n",
 				no, iact, ilat, ilon, ialt, mi.P1, mi.P2, mi.P3, flg)
