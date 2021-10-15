@@ -38,7 +38,7 @@ var (
 	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
 	show_vers  = flag.Bool("v", false, "Shows version")
 	outfmt     = flag.String("fmt", "xml", "Output format (xml, json, cli)")
-	MaxWP      = flag.Int("maxwp", INAV_MAX_WP, "Maximum WP permitted")
+	MaxWP      = 60
 )
 
 var GitCommit = "local"
@@ -77,7 +77,7 @@ func sanitise_mission(m *Mission, mtype string) {
 	if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
 		m.Add_rtl(*force_land)
 	}
-	if mlen := len(m.MissionItems); mlen > *MaxWP {
+	if mlen := len(m.MissionItems); mlen > MaxWP {
 		log.Fatal(fmt.Sprintf("Mission has too many (%d) waypoints\n", mlen))
 	}
 }

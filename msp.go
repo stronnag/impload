@@ -285,6 +285,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				m.Send_msp(msp_WP_GETINFO, nil)
 			case msp_WP_GETINFO:
 				wp_max := v.data[1]
+				MaxWP = int(wp_max)
 				wp_valid := v.data[2]
 				wp_count := v.data[3]
 				fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
