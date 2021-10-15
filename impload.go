@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -146,9 +147,33 @@ func check_device() DevDescription {
 	return devdesc
 }
 
+func resolve_default_gw() string {
+	cmds := []string{"ip route show 0.0.0.0/0 | cut -d ' ' -f3",
+		"route -n | grep UG | awk '{print $2}'",
+		"route -n show  0.0.0.0 | grep gateway | awk '{print $2}'"}
+
+	ostr := os.Getenv("MWP_SERIAL_HOST")
+	if ostr != "" {
+		return ostr
+	}
+	for _, c := range cmds {
+		out, err := exec.Command("sh", "-c", c).Output()
+		ostr := strings.TrimSpace(string(out))
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			if len(ostr) > 0 {
+				return ostr
+			}
+		}
+	}
+	return "__MWP_SERIAL_HOST"
+}
+
+
 func parse_device() DevDescription {
 	dd := DevDescription{name: "", klass: DevClass_NONE}
-	r := regexp.MustCompile(`^(tcp|udp)://([\[\]:A-Za-z\-\.0-9]*):(\d+)/{0,1}([A-Za-z\-\.0-9]*):{0,1}(\d*)`)
+	r := regexp.MustCompile(`^(tcp|udp)://(__MWP_SERIAL_HOST|[\[\]:A-Za-z\-\.0-9]*):(\d+)/{0,1}([A-Za-z\-\.0-9]*):{0,1}(\d*)`)
 	m := r.FindAllStringSubmatch(*device, -1)
 	if len(m) > 0 {
 		if m[0][1] == "tcp" {
@@ -157,6 +182,9 @@ func parse_device() DevDescription {
 			dd.klass = DevClass_UDP
 		}
 		dd.name = m[0][2]
+		if dd.name == "__MWP_SERIAL_HOST" {
+			dd.name = resolve_default_gw()
+		}
 		dd.param, _ = strconv.Atoi(m[0][3])
 		// These are only used for ESP8266 UDP
 		dd.name1 = m[0][4]
