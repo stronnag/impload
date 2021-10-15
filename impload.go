@@ -18,6 +18,8 @@ const (
 	DevClass_BT
 )
 
+const INAV_MAX_WP = 120
+
 type DevDescription struct {
 	klass  int
 	name   string
@@ -73,7 +75,7 @@ func sanitise_mission(m *Mission, mtype string) {
 	if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
 		m.Add_rtl(*force_land)
 	}
-	if mlen := len(m.MissionItems); mlen > 60 {
+	if mlen := len(m.MissionItems); mlen > 120 {
 		log.Fatal(fmt.Sprintf("Mission has too many (%d) waypoints\n", mlen))
 	}
 }

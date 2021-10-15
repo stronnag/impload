@@ -199,7 +199,7 @@ func (m *Mission) is_valid() bool {
 		return true
 	}
 	mlen := int16(len(m.MissionItems))
-	if mlen > 60 {
+	if mlen > INAV_MAX_WP {
 		return false
 	}
 	// Urg, Urg array index v. WP Nos ......
