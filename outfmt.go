@@ -55,7 +55,15 @@ func (m *Mission) Update_mission_meta() {
 		offlon, _ = strconv.ParseFloat(offsets[1], 64)
 	}
 
+	ino := 1
 	for j := range m.MissionItems {
+		m.MissionItems[j].No = ino
+		if m.MissionItems[j].Flag == 0xa5 {
+			ino = 1
+		} else {
+			ino++
+		}
+
 		if m.MissionItems[j].is_GeoPoint() {
 			if moving != "" {
 				m.MissionItems[j].Lat += offlat

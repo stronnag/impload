@@ -111,6 +111,18 @@ func do_download(outf string, eeprom bool) {
 	m.Dump(*outfmt, outf)
 }
 
+func do_get_multi_index() {
+	devdesc := check_device()
+	s := MSPInit(devdesc)
+	s.get_multi_index()
+}
+
+func do_set_multi_index(mval int) {
+	devdesc := check_device()
+	s := MSPInit(devdesc)
+	s.set_multi_index(uint8(mval))
+}
+
 func verify_in_out_files(files []string) (string, string) {
 	var inf, outf string
 	if len(files) == 0 {
@@ -211,7 +223,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage of impload [options] command [files ...]\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "  command:\n\tAction required (upload|download|store|restore|convert|test|clear|erase)\n\n")
+		fmt.Fprintf(os.Stderr, "  command:\n\tAction required (upload|download|store|restore|convert|test|clear|erase|multi[=n])\n\n")
 		fmt.Fprintln(os.Stderr, GetVersion())
 	}
 
@@ -248,9 +260,21 @@ func main() {
 		do_download(inf, true)
 	case "clear", "erase":
 		do_clear(files[0] == "erase")
+	case "multi":
+		do_get_multi_index()
 	case "version":
 		fmt.Fprintln(os.Stderr, GetVersion())
 	default:
-		fmt.Fprintf(os.Stderr, "impload: unrecognised command \"%s\"\n", files[0])
+		if strings.HasPrefix(files[0], "multi=") {
+			mparts := strings.Split(files[0], "=")
+			if len(mparts) == 2 {
+				mval, err := strconv.Atoi(mparts[1])
+				if err == nil && mval > 1 && mval < 10 {
+					do_set_multi_index(mval)
+				}
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "impload: unrecognised command \"%s\"\n", files[0])
+		}
 	}
 }
