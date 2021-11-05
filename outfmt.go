@@ -147,10 +147,10 @@ func (m *Mission) To_cli(fname string) {
 		fmt.Fprintln(w, "# wp load")
 		fmt.Fprintf(w, "#wp %d valid\n", nmi)
 
+		no := 1
 		for _, mi := range m.MissionItems {
-			no := mi.No - 1
 			flg := 0
-			if mi.No == nmi {
+			if no == nmi {
 				flg = 0xa5
 			}
 			ilat := int(mi.Lat * 1e7)
@@ -162,6 +162,7 @@ func (m *Mission) To_cli(fname string) {
 			}
 			fmt.Fprintf(w, "wp %d %d %d %d %d %d %d %d %d\n",
 				no, iact, ilat, ilon, ialt, mi.P1, mi.P2, mi.P3, flg)
+			no++
 		}
 	}
 }

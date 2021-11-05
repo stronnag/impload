@@ -83,6 +83,10 @@ type MSPSerial struct {
 	c0    chan MsgData
 }
 
+var (
+	Wp_count byte
+)
+
 func crc8_dvb_s2(crc byte, a byte) byte {
 	crc ^= a
 	for i := 0; i < 8; i++ {
@@ -395,13 +399,21 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				} else {
 					fmt.Fprintln(os.Stderr, "")
 				}
+				if Wp_count == 0 {
+					z := make([]byte, 1)
+					z[0] = 1
+					m.Send_msp(msp_WP_MISSION_LOAD, z)
+				} else {
+					m.Send_msp(msp_WP_GETINFO, nil)
+				}
+			case msp_WP_MISSION_LOAD:
 				m.Send_msp(msp_WP_GETINFO, nil)
 			case msp_WP_GETINFO:
 				wp_max := v.data[1]
 				MaxWP = int(wp_max)
 				wp_valid := v.data[2]
-				wp_count := v.data[3]
-				fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+				Wp_count = v.data[3]
+				fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", Wp_count, wp_max, wp_valid)
 				done = true
 			default:
 				fmt.Fprintf(os.Stderr, "Unsolicited %d, length %d\n", v.cmd, v.len)
