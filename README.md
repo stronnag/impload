@@ -5,7 +5,7 @@ impload - iNav Mission Plan uploader
 
 [impload](https://github.com/stronnag/impload) is a cross-platform command line application to upload missions in a number of formats to an iNav flight controller. "Alien" formats may also be converted to MW-XML. Supported formats include:
 
-* [MW XML](https://github.com/stronnag/mwptools/blob/master/samples/mw-mission.xsd) mission files (as used by [mwp](https://github.com/stronnag/mwptools), ezgui, mission planner for inav)
+* [MW XML](https://github.com/iNavFlight/inav/tree/master/docs/development/wp_mission_schema) mission files (as used by [mwp](https://github.com/stronnag/mwptools), [inav configurator](https://github.com/iNavFlight/inav-configurator), ezgui, mission planner for inav)
 * apmplanner / qgroundcontrol mission files (qgc plan mission and survey at least).
 * GPX files (tracks, routes, waypoints)
 * KML, KMZ files
