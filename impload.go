@@ -56,29 +56,28 @@ func do_test() {
 func do_convert(inf string, outf string) {
 	mtype, m, err := Read_Mission_File(inf)
 	if m != nil && err == nil {
-		sanitise_mission(m, mtype)
+		//		sanitise_mission(m, mtype)
 		m.Dump(*outfmt, outf, inf, mtype)
 	} else {
 		log.Fatal("Invalid input file\n")
 	}
 }
 
-func sanitise_mission(m *Mission, mtype string) {
-	for j, mi := range m.MissionItems {
-		if mi.Action == "WAYPOINT" {
-			if *defspeed != 0.0 && mi.P1 == 0 {
-				m.MissionItems[j].P1 = int16(*defspeed * 100)
-			}
-			if mi.Alt == 0 {
-				m.MissionItems[j].Alt = int32(*defalt)
+func sanitise_mission(mm *MultiMission, mtype string) {
+	for _, m := range mm.Segment {
+		for j, mi := range m.MissionItems {
+			if mi.Action == "WAYPOINT" {
+				if *defspeed != 0.0 && mi.P1 == 0 {
+					m.MissionItems[j].P1 = int16(*defspeed * 100)
+				}
+				if mi.Alt == 0 {
+					m.MissionItems[j].Alt = int32(*defalt)
+				}
 			}
 		}
-	}
-	if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
-		m.Add_rtl(*force_land)
-	}
-	if mlen := len(m.MissionItems); mlen > MaxWP {
-		log.Fatal(fmt.Sprintf("Mission has too many (%d) waypoints\n", mlen))
+		if (mtype == "gpx" || mtype == "kml") && (*force_rtl || *force_land) {
+			m.Add_rtl(*force_land)
+		}
 	}
 }
 
@@ -89,7 +88,8 @@ func do_clear(eeprom bool) {
 	m.Version.Value = GetVersion()
 	item := MissionItem{No: 1, Lat: 0.0, Lon: 0.0, Alt: int32(25), Action: "RTH"}
 	m.MissionItems = append(m.MissionItems, item)
-	s.upload(m, eeprom)
+	mm := m.Generate_MultiMission()
+	s.upload(mm, eeprom)
 }
 
 func do_upload(inf string, eeprom bool) {

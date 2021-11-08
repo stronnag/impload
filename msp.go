@@ -493,7 +493,7 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	return len(buf), buf
 }
 
-func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
+func (m *MSPSerial) download(eeprom bool) *MultiMission {
 	if eeprom {
 		z := make([]byte, 1)
 		z[0] = 1
@@ -518,7 +518,7 @@ func (m *MSPSerial) download(eeprom bool) (ms *Mission) {
 			}
 		}
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
 func deserialise_wp(b []byte) (bool, MissionItem) {
@@ -541,25 +541,29 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	return last, item
 }
 
-func (m *MSPSerial) upload(ms *Mission, eeprom bool) {
+func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
+	if mm.is_valid() {
 
-	if ms.is_valid() {
-		mlen := len(ms.MissionItems)
-		fmt.Fprintf(os.Stderr, "upload %d, save %v\n", mlen, eeprom)
-		for i, v := range ms.MissionItems {
-			fmt.Fprintf(os.Stderr, "Upload %d\r", i)
-			v.No = i + 1
-			_, b := serialise_wp(v, (i == mlen-1))
-			m.Wait_msp(msp_SET_WP, b)
+		i := 0
+		for _, ms := range mm.Segment {
+			mlen := len(ms.MissionItems)
+			for _, v := range ms.MissionItems {
+				fmt.Fprintf(os.Stderr, "Upload %d\r", i)
+				i++
+				v.No = i
+				_, b := serialise_wp(v, (i == mlen-1))
+				s.Wait_msp(msp_SET_WP, b)
+			}
 		}
+		fmt.Fprintf(os.Stderr, "upload %d, save %v\n", i, eeprom)
 
 		if eeprom {
 			z := make([]byte, 1)
 			z[0] = 1
-			m.Wait_msp(msp_WP_MISSION_SAVE, z)
+			s.Wait_msp(msp_WP_MISSION_SAVE, z)
 			fmt.Fprintf(os.Stderr, "Saved mission\n")
 		}
-		v := m.Wait_msp(msp_WP_GETINFO, nil)
+		v := s.Wait_msp(msp_WP_GETINFO, nil)
 		wp_max := v.data[1]
 		wp_valid := v.data[2]
 		wp_count := v.data[3]

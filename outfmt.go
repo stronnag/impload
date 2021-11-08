@@ -44,7 +44,7 @@ func evince_zoom(bbox BBox) int {
 	return z
 }
 
-func (m *Mission) Update_mission_meta() {
+func (mm *MultiMission) Update_mission_meta() {
 	var bbox = BBox{-999, 999, -999, 999}
 	var cx, cy, ni float64
 	var offlat, offlon float64
@@ -55,44 +55,43 @@ func (m *Mission) Update_mission_meta() {
 		offlon, _ = strconv.ParseFloat(offsets[1], 64)
 	}
 
-	ino := 1
-	for j := range m.MissionItems {
-		m.MissionItems[j].No = ino
-		if m.MissionItems[j].Flag == 0xa5 {
-			ino = 1
-		} else {
+	for i := range mm.Segment {
+		m := mm.Segment[i]
+		ino := 1
+		for j := range m.MissionItems {
+			m.MissionItems[j].No = ino
 			ino++
-		}
 
-		if m.MissionItems[j].is_GeoPoint() {
-			if moving != "" {
-				m.MissionItems[j].Lat += offlat
-				m.MissionItems[j].Lon += offlon
-			}
-			cy += m.MissionItems[j].Lat
-			cx += m.MissionItems[j].Lon
-			ni++
-			if m.MissionItems[j].Lat > bbox.lamax {
-				bbox.lamax = m.MissionItems[j].Lat
-			}
-			if m.MissionItems[j].Lat < bbox.lamin {
-				bbox.lamin = m.MissionItems[j].Lat
-			}
-			if m.MissionItems[j].Lon > bbox.lomax {
-				bbox.lomax = m.MissionItems[j].Lon
-			}
-			if m.MissionItems[j].Lon < bbox.lomin {
-				bbox.lomin = m.MissionItems[j].Lon
+			if m.MissionItems[j].is_GeoPoint() {
+				if moving != "" {
+					m.MissionItems[j].Lat += offlat
+					m.MissionItems[j].Lon += offlon
+				}
+				cy += m.MissionItems[j].Lat
+				cx += m.MissionItems[j].Lon
+				ni++
+				if m.MissionItems[j].Lat > bbox.lamax {
+					bbox.lamax = m.MissionItems[j].Lat
+				}
+				if m.MissionItems[j].Lat < bbox.lamin {
+					bbox.lamin = m.MissionItems[j].Lat
+				}
+				if m.MissionItems[j].Lon > bbox.lomax {
+					bbox.lomax = m.MissionItems[j].Lon
+				}
+				if m.MissionItems[j].Lon < bbox.lomin {
+					bbox.lomin = m.MissionItems[j].Lon
+				}
 			}
 		}
+		if ni > 0 {
+			m.Metadata.Cx = cx / ni
+			m.Metadata.Cy = cy / ni
+		}
+		m.Metadata.Zoom = evince_zoom(bbox)
+		m.Metadata.Generator = "impload"
+		m.Metadata.Stamp = time.Now().Format(time.RFC3339)
 	}
-	if ni > 0 {
-		m.Metadata.Cx = cx / ni
-		m.Metadata.Cy = cy / ni
-	}
-	m.Metadata.Zoom = evince_zoom(bbox)
-	m.Metadata.Generator = "impload"
-	m.Metadata.Stamp = time.Now().Format(time.RFC3339)
 }
 
 func xml_comment(params []string) string {
@@ -118,51 +117,52 @@ func xml_comment(params []string) string {
 	return sb.String()
 }
 
-func (m *Mission) To_xml(params ...string) {
-	m.Comment = xml_comment(params)
-	m.Update_mission_meta()
+func (mm *MultiMission) To_xml(params ...string) {
+	mm.Comment = xml_comment(params)
+	mm.Update_mission_meta()
 	w, err := openStdoutOrFile(params[0])
 	if err == nil {
-		xs, _ := xml.MarshalIndent(m, "", " ")
+		xs, _ := xml.MarshalIndent(mm, "", " ")
 		fmt.Fprint(w, xml.Header)
 		fmt.Fprintln(w, string(xs))
 	}
 }
 
-func (m *Mission) To_json(fname string) {
+func (mm *MultiMission) To_json(fname string) {
 	w, err := openStdoutOrFile(fname)
 	if err == nil {
 		defer w.Close()
-		m.Update_mission_meta()
-		js, _ := json.Marshal(m)
+		mm.Update_mission_meta()
+		js, _ := json.Marshal(mm)
 		fmt.Fprintln(w, string(js))
 	}
 }
 
-func (m *Mission) To_cli(fname string) {
+func (mm *MultiMission) To_cli(fname string) {
 	w, err := openStdoutOrFile(fname)
 	if err == nil {
 		defer w.Close()
-		nmi := len(m.MissionItems)
 		fmt.Fprintln(w, "# wp load")
-		fmt.Fprintf(w, "#wp %d valid\n", nmi)
+		nmi := 0
+		for _, m := range mm.Segment {
+			nmi += len(m.MissionItems)
+		}
 
+		fmt.Fprintf(w, "#wp %d valid\n", nmi)
 		no := 1
-		for _, mi := range m.MissionItems {
-			flg := 0
-			if no == nmi {
-				flg = 0xa5
+		for _, m := range mm.Segment {
+			for _, mi := range m.MissionItems {
+				ilat := int(mi.Lat * 1e7)
+				ilon := int(mi.Lon * 1e7)
+				ialt := int(mi.Alt * 100)
+				iact := Encode_action(mi.Action)
+				if iact == 6 {
+					mi.P1--
+				}
+				fmt.Fprintf(w, "wp %d %d %d %d %d %d %d %d %d\n",
+					no, iact, ilat, ilon, ialt, mi.P1, mi.P2, mi.P3, mi.Flag)
+				no++
 			}
-			ilat := int(mi.Lat * 1e7)
-			ilon := int(mi.Lon * 1e7)
-			ialt := int(mi.Alt * 100)
-			iact := Encode_action(mi.Action)
-			if iact == 6 {
-				mi.P1--
-			}
-			fmt.Fprintf(w, "wp %d %d %d %d %d %d %d %d %d\n",
-				no, iact, ilat, ilon, ialt, mi.P1, mi.P2, mi.P3, flg)
-			no++
 		}
 	}
 }

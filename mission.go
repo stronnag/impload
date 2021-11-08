@@ -29,14 +29,14 @@ type qgc_plan struct {
 	Filetype string `json:"fileType"`
 	Mission  struct {
 		Items []struct {
-			Typ         string    `json:"type"`
-			Altitude    int       `json:"Altitude"`
+			Typ          string    `json:"type"`
+			Altitude     int       `json:"Altitude"`
 			Altitudemode int       `json:"AltitudeMode"`
-			Command     int       `json:"command"`
-			Jumpid      int       `json:"doJumpId"`
-			Frame       int       `json:"frame"`
-			Params      []float64 `json:"params"`
-			Transect    struct {
+			Command      int       `json:"command"`
+			Jumpid       int       `json:"doJumpId"`
+			Frame        int       `json:"frame"`
+			Params       []float64 `json:"params"`
+			Transect     struct {
 				Items []struct {
 					Typ         string    `json:"type"`
 					Altitude    int       `json:"Altitude"`
@@ -49,6 +49,13 @@ type qgc_plan struct {
 			} `json:"TransectStyleComplexItem,omitempty"`
 		} `json:"items"`
 	} `json:"mission"`
+}
+
+type PlaceMark struct {
+	LineString struct {
+		AltitudeMode string `xml:"altitudeMode"`
+		Coordinates  string `xml:"coordinates"`
+	} `xml:"LineString"`
 }
 
 type MissionItem struct {
@@ -64,12 +71,12 @@ type MissionItem struct {
 }
 
 type MissionMWP struct {
-	Zoom  int     `xml:"zoom,attr" json:"zoom"`
-	Cx    float64 `xml:"cx,attr" json:"cx"`
-	Cy    float64 `xml:"cy,attr" json:"cy"`
-	Homex float64 `xml:"home-x,attr" json:"home-x"`
-	Homey float64 `xml:"home-y,attr" json:"home-y"`
-	Stamp string  `xml:"save-date,attr" json:"save-date"`
+	Zoom      int     `xml:"zoom,attr" json:"zoom"`
+	Cx        float64 `xml:"cx,attr" json:"cx"`
+	Cy        float64 `xml:"cy,attr" json:"cy"`
+	Homex     float64 `xml:"home-x,attr" json:"home-x"`
+	Homey     float64 `xml:"home-y,attr" json:"home-y"`
+	Stamp     string  `xml:"save-date,attr" json:"save-date"`
 	Generator string  `xml:"generator,attr" json:"generator"`
 }
 
@@ -80,16 +87,34 @@ type Version struct {
 type Mission struct {
 	XMLName      xml.Name      `xml:"mission"  json:"-"`
 	Version      Version       `xml:"version" json:"-"`
-	Comment      string         `xml:",comment" json:"-"`
-	Metadata     MissionMWP    `xml:"mwp" json:"meta"`
+	Comment      string        `xml:",comment" json:"-"`
+	Metadata     []MissionMWP    `xml:"mwp" json:"meta"`
+	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
+}
+type MissionSegment struct {
+	Metadata MissionMWP    `xml:"mwp" json:"meta"`
 	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
 }
 
-type PlaceMark struct {
-	LineString struct {
-		AltitudeMode string `xml:"altitudeMode"`
-		Coordinates  string `xml:"coordinates"`
-	} `xml:"LineString"`
+type MultiMission struct {
+	XMLName xml.Name `xml:"mission"  json:"-"`
+	Version Version  `xml:"version" json:"-"`
+	Comment string   `xml:",comment" json:"-"`
+	Segment    []MissionSegment  `json:"missions"`
+}
+
+// Custom encoder to avoid element tags around each segment
+
+func (ml *MissionSegment) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if err := e.EncodeElement(ml.Metadata, xml.StartElement{Name: xml.Name{Local: "mwp"}}); err != nil {
+		return err
+	}
+	for _, mi := range ml.MissionItems {
+		if err := e.EncodeElement(mi, xml.StartElement{Name: xml.Name{Local: "missionitem"}}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func find_kml_coords(dat []byte) *PlaceMark {
@@ -115,8 +140,7 @@ func find_kml_coords(dat []byte) *PlaceMark {
 	return nil
 }
 
-func read_kml(dat []byte) *Mission {
-
+func read_kml(dat []byte) *MultiMission {
 	mission := &Mission{}
 	pm := find_kml_coords(dat)
 	if pm != nil {
@@ -137,7 +161,7 @@ func read_kml(dat []byte) *Mission {
 				lat, _ := strconv.ParseFloat(coords[1], 64)
 				alt := 0.0
 				if len(coords) > 2 {
-					alt,_ =  strconv.ParseFloat(coords[2], 64)
+					alt, _ = strconv.ParseFloat(coords[2], 64)
 				}
 				item := MissionItem{No: n, Lat: lat, Lon: lon, Alt: int32(alt), P3: p3,
 					Action: "WAYPOINT"}
@@ -146,7 +170,7 @@ func read_kml(dat []byte) *Mission {
 			}
 		}
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
 type Gpx struct {
@@ -157,23 +181,23 @@ type Gpx struct {
 }
 
 type Pts struct {
-	Lat float64 `xml:"lat,attr"`
-	Lon float64 `xml:"lon,attr"`
-	Elev float64    `xml:"ele"`
+	Lat  float64 `xml:"lat,attr"`
+	Lon  float64 `xml:"lon,attr"`
+	Elev float64 `xml:"ele"`
 }
 
-func read_gpx(dat []byte) *Mission {
+func read_gpx(dat []byte) *MultiMission {
 	mission := &Mission{}
 	var pts []Pts
 	var g Gpx
 	err := xml.Unmarshal(dat, &g)
 	if err == nil {
 		if len(g.Wpts) > 0 {
-			pts =g.Wpts
+			pts = g.Wpts
 		} else if len(g.Rpts) > 0 {
-			pts =g.Rpts
+			pts = g.Rpts
 		} else if len(g.Tpts) > 0 {
-			pts =g.Tpts
+			pts = g.Tpts
 		}
 		if pts != nil {
 			for k, p := range pts {
@@ -185,7 +209,7 @@ func read_gpx(dat []byte) *Mission {
 	} else {
 		fmt.Fprintf(os.Stderr, "GPX error: %v", err)
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
 func (mi *MissionItem) is_GeoPoint() bool {
@@ -193,41 +217,50 @@ func (mi *MissionItem) is_GeoPoint() bool {
 	return !(a == "RTH" || a == "SET_HEAD" || a == "JUMP")
 }
 
-func (m *Mission) is_valid() bool {
+func (mm *MultiMission) is_valid() bool {
 	force := os.Getenv("IMPLOAD_NO_VERIFY")
 	if len(force) > 0 {
 		return true
 	}
-	mlen := int16(len(m.MissionItems))
-	if mlen > int16(MaxWP) {
-		return false
-	}
 	// Urg, Urg array index v. WP Nos ......
-	for i := int16(0); i < mlen; i++ {
-		var target = m.MissionItems[i].P1 - 1
-		if m.MissionItems[i].Action == "JUMP" {
-			if (i == 0) || ((target > (i - 2)) && (target < (i + 2))) || (target >= mlen) || (m.MissionItems[i].P2 < -1) {
-				return false
-			}
-			if !(m.MissionItems[target].Action == "WAYPOINT" || m.MissionItems[target].Action == "POSHOLD_TIME" || m.MissionItems[target].Action == "LAND") {
-				return false
+	xmlen := int16(0)
+	for _, m := range mm.Segment {
+		mlen := int16(len(m.MissionItems))
+		xmlen += mlen
+		for i := int16(0); i < mlen; i++ {
+			var target = m.MissionItems[i].P1 - 1
+			if m.MissionItems[i].Action == "JUMP" {
+				if (i == 0) || ((target > (i - 2)) && (target < (i + 2))) || (target >= mlen) || (m.MissionItems[i].P2 < -1) {
+					return false
+				}
+				if !(m.MissionItems[target].Action == "WAYPOINT" || m.MissionItems[target].Action == "POSHOLD_TIME" || m.MissionItems[target].Action == "LAND") {
+					return false
+				}
 			}
 		}
+	}
+	if xmlen > int16(MaxWP) {
+		return false
 	}
 	return true
 }
 
-func (m *Mission) Add_rtl(land bool) {
+func (m *MissionSegment) Add_rtl(land bool) {
 	k := len(m.MissionItems)
 	p1 := int16(0)
 	if land {
 		p1 = 1
 	}
+	if k > 0 {
+		if m.MissionItems[k-1].Flag == 0xa5 {
+			m.MissionItems[k-1].Flag = 0
+		}
+	}
 	item := MissionItem{No: k + 1, Lat: 0.0, Lon: 0.0, Alt: 0, Action: "RTH", P1: p1}
 	m.MissionItems = append(m.MissionItems, item)
 }
 
-func (m *Mission) Dump(outfmt string, params ...string) {
+func (m *MultiMission) Dump(outfmt string, params ...string) {
 	switch outfmt {
 	case "cli":
 		m.To_cli(params[0])
@@ -238,9 +271,32 @@ func (m *Mission) Dump(outfmt string, params ...string) {
 	}
 }
 
-func read_simple(dat []byte) *Mission {
-	r := csv.NewReader(strings.NewReader(string(dat)))
+func (m *Mission) Generate_MultiMission() *MultiMission {
+	var ml []MissionSegment
+	mw := 0
+	lj := 0
+	for j, mi := range m.MissionItems {
+		if mi.Flag == 165 {
+			mlx := MissionSegment{Metadata: m.Metadata[mw], MissionItems: m.MissionItems[lj : j+1]}
+			ml = append(ml, mlx)
+			lj = j + 1
+			mw++
+		}
+	}
+	if lj == 0 {
+		n := len(m.MissionItems)
+		if n > 0 {
+			m.MissionItems[n-1].Flag = 0xa5
+		}
+		mlx := MissionSegment{Metadata: m.Metadata[0], MissionItems: m.MissionItems}
+		ml = append(ml, mlx)
+	}
 
+	return &MultiMission{Comment: m.Comment, Segment: ml, Version: m.Version}
+}
+
+func read_simple(dat []byte) *MultiMission {
+	r := csv.NewReader(strings.NewReader(string(dat)))
 	mission := &Mission{}
 
 	n := 1
@@ -337,12 +393,12 @@ func read_simple(dat []byte) *Mission {
 		mission.MissionItems = append(mission.MissionItems, item)
 		n++
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
 func read_qgc_json(dat []byte) []QGCrec {
 	qgcs := []QGCrec{}
-  var qm qgc_plan
+	var qm qgc_plan
 	json.Unmarshal(dat, &qm)
 	if qm.Filetype == "Plan" {
 		for _, qmi := range qm.Mission.Items {
@@ -379,7 +435,7 @@ func read_qgc_json(dat []byte) []QGCrec {
 			}
 		}
 	} else {
-		fmt.Fprintln(os.Stderr, "Skipping non-Plan file");
+		fmt.Fprintln(os.Stderr, "Skipping non-Plan file")
 	}
 	return qgcs
 }
@@ -423,7 +479,7 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 				jumptgt := mission.MissionItems[i].P1
 				ajump := int16(0)
 				for j := 0; j < len(mission.MissionItems); j++ {
-					p3abs := mission.MissionItems[j].P3; // -ve indicate amsl
+					p3abs := mission.MissionItems[j].P3 // -ve indicate amsl
 					if p3abs < 0 {
 						p3abs *= -1
 					}
@@ -459,7 +515,7 @@ func fixup_qgc_mission(mission *Mission, have_jump bool) (*Mission, bool) {
 	}
 }
 
-func process_qgc(dat []byte, mtype string) *Mission {
+func process_qgc(dat []byte, mtype string) *MultiMission {
 	var qs []QGCrec
 	mission := &Mission{}
 
@@ -577,7 +633,7 @@ func process_qgc(dat []byte, mtype string) *Mission {
 			no++
 			item := MissionItem{No: no, Lat: q.lat, Lon: q.lon, Alt: int32(q.alt), Action: action, P1: p1, P2: p2, P3: p3}
 			if item.is_GeoPoint() && q.altmode == 2 { // AMSL
-				item.P3 *= -1; // -ve P3 indicates amsl
+				item.P3 *= -1 // -ve P3 indicates amsl
 			}
 			mission.MissionItems = append(mission.MissionItems, item)
 			if last {
@@ -590,10 +646,10 @@ func process_qgc(dat []byte, mtype string) *Mission {
 	if !ok {
 		log.Fatalf("Unsupported QGC file\n")
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
-func read_xml_mission(dat []byte) *Mission {
+func read_xml_mission(dat []byte) *MultiMission {
 	m := &Mission{}
 	buf := bytes.NewBuffer(dat)
 	dec := xml.NewDecoder(buf)
@@ -619,10 +675,10 @@ func read_xml_mission(dat []byte) *Mission {
 			}
 		}
 	}
-	return m
+	return m.Generate_MultiMission()
 }
 
-func read_kmz(path string) (string, *Mission) {
+func read_kmz(path string) (string, *MultiMission) {
 	r, err := zip.OpenReader(path)
 	if err != nil {
 		log.Fatal(err)
@@ -644,13 +700,22 @@ func read_kmz(path string) (string, *Mission) {
 	return "", nil
 }
 
-func read_json(dat []byte) *Mission {
-	m := &Mission{}
-	json.Unmarshal(dat, m)
-	return m
+func read_json(dat []byte, flg int) *MultiMission {
+	switch flg {
+	case 0:
+		m := &Mission{}
+		json.Unmarshal(dat, m)
+		return m.Generate_MultiMission()
+	case 1:
+		mm := &MultiMission{}
+		json.Unmarshal(dat, mm)
+		return mm
+	default:
+		return nil
+	}
 }
 
-func read_inav_cli(dat []byte) *Mission {
+func read_inav_cli(dat []byte) *MultiMission {
 	mission := &Mission{}
 	for _, ln := range strings.Split(string(dat), "\n") {
 		if strings.HasPrefix(ln, "wp ") {
@@ -673,7 +738,7 @@ func read_inav_cli(dat []byte) *Mission {
 				}
 				no++
 				alt /= 100
-				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3),uint8(flg)}
+				item := MissionItem{no, action, lat, lon, int32(alt), int16(p1), int16(p2), int16(p3), uint8(flg)}
 				mission.MissionItems = append(mission.MissionItems, item)
 				if flg == 0xa5 {
 					break
@@ -681,10 +746,10 @@ func read_inav_cli(dat []byte) *Mission {
 			}
 		}
 	}
-	return mission
+	return mission.Generate_MultiMission()
 }
 
-func Read_Mission_File(path string) (string, *Mission, error) {
+func Read_Mission_File(path string) (string, *MultiMission, error) {
 	var dat []byte
 	r, err := openStdinOrFile(path)
 	if err == nil {
@@ -695,16 +760,16 @@ func Read_Mission_File(path string) (string, *Mission, error) {
 		return "?", nil, err
 	} else {
 		mtype, m := handle_mission_data(dat, path)
-		if !m.is_valid() {
-			fmt.Fprintf(os.Stderr, "Note: Mission fails verification\n")
+		if m == nil || !m.is_valid() {
+			fmt.Fprintf(os.Stderr, "Note: Mission fails verification %s\n", mtype)
 		}
 		return mtype, m, nil
 	}
 }
 
-func handle_mission_data(dat []byte, path string) (string, *Mission) {
-	var m *Mission
-	mtype := ""
+func handle_mission_data(dat []byte, path string) (string, *MultiMission) {
+	var m *MultiMission
+	mtype := "unknown"
 	switch {
 	case bytes.HasPrefix(dat, []byte("<?xml")):
 		switch {
@@ -730,10 +795,13 @@ func handle_mission_data(dat []byte, path string) (string, *Mission) {
 		mtype = "csv"
 	case bytes.HasPrefix(dat, []byte("PK\003\004")):
 		mtype, m = read_kmz(path)
-	case bytes.HasPrefix(dat, []byte("{\"meta\":{")):
-		mtype = "mwp-json"
-		m = read_json(dat)
-	case bytes.Contains(dat[0:100], []byte("\"fileType\": \"Plan\"")):
+	case bytes.HasPrefix(dat, []byte(`{"meta":{`)):
+		mtype = "mwp-json-s"
+		m = read_json(dat, 0)
+	case bytes.HasPrefix(dat, []byte(`{"missions":[`)):
+		mtype = "mwp-json-m"
+		m = read_json(dat, 1)
+	case bytes.Contains(dat[0:100], []byte(`"fileType": "Plan"`)):
 		mtype = "qgc-json"
 		m = process_qgc(dat, mtype)
 	case bytes.HasPrefix(dat, []byte("# wp")), bytes.HasPrefix(dat, []byte("#wp")), bytes.HasPrefix(dat, []byte("wp 0")):
