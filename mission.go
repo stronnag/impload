@@ -271,13 +271,24 @@ func (m *MultiMission) Dump(outfmt string, params ...string) {
 	}
 }
 
+func (m *Mission) getmeta(mw int) MissionMWP {
+	var meta MissionMWP
+	if m.Metadata == nil || len(m.Metadata) <= mw {
+		meta = MissionMWP{}
+	} else {
+		meta = m.Metadata[mw]
+	}
+	return meta;
+}
+
 func (m *Mission) Generate_MultiMission() *MultiMission {
 	var ml []MissionSegment
 	mw := 0
 	lj := 0
 	for j, mi := range m.MissionItems {
 		if mi.Flag == 165 {
-			mlx := MissionSegment{Metadata: m.Metadata[mw], MissionItems: m.MissionItems[lj : j+1]}
+			meta := m.getmeta(mw)
+			mlx := MissionSegment{Metadata: meta, MissionItems: m.MissionItems[lj : j+1]}
 			ml = append(ml, mlx)
 			lj = j + 1
 			mw++
@@ -288,7 +299,8 @@ func (m *Mission) Generate_MultiMission() *MultiMission {
 		if n > 0 {
 			m.MissionItems[n-1].Flag = 0xa5
 		}
-		mlx := MissionSegment{Metadata: m.Metadata[0], MissionItems: m.MissionItems}
+		meta := m.getmeta(mw)
+		mlx := MissionSegment{Metadata: meta, MissionItems: m.MissionItems}
 		ml = append(ml, mlx)
 	}
 

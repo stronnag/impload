@@ -551,7 +551,7 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 				fmt.Fprintf(os.Stderr, "Upload %d\r", i)
 				i++
 				v.No = i
-				_, b := serialise_wp(v, (i == mlen-1))
+				_, b := serialise_wp(v, (i == mlen))
 				s.Wait_msp(msp_SET_WP, b)
 			}
 		}

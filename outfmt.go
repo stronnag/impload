@@ -45,10 +45,8 @@ func evince_zoom(bbox BBox) int {
 }
 
 func (mm *MultiMission) Update_mission_meta() {
-	var bbox = BBox{-999, 999, -999, 999}
-	var cx, cy, ni float64
-	var offlat, offlon float64
 	var moving = os.Getenv("MWP_POS_OFFSET")
+	var offlat, offlon float64
 	if moving != "" {
 		offsets := strings.Split(moving, ",")
 		offlat, _ = strconv.ParseFloat(offsets[0], 64)
@@ -56,41 +54,42 @@ func (mm *MultiMission) Update_mission_meta() {
 	}
 
 	for i := range mm.Segment {
-		m := mm.Segment[i]
 		ino := 1
-		for j := range m.MissionItems {
-			m.MissionItems[j].No = ino
+		var bbox = BBox{-999, 999, -999, 999}
+		var cx, cy, ni float64
+		for j := range mm.Segment[i].MissionItems {
+			mm.Segment[i].MissionItems[j].No = ino
 			ino++
 
-			if m.MissionItems[j].is_GeoPoint() {
+			if mm.Segment[i].MissionItems[j].is_GeoPoint() {
 				if moving != "" {
-					m.MissionItems[j].Lat += offlat
-					m.MissionItems[j].Lon += offlon
+					mm.Segment[i].MissionItems[j].Lat += offlat
+					mm.Segment[i].MissionItems[j].Lon += offlon
 				}
-				cy += m.MissionItems[j].Lat
-				cx += m.MissionItems[j].Lon
+				cy += mm.Segment[i].MissionItems[j].Lat
+				cx += mm.Segment[i].MissionItems[j].Lon
 				ni++
-				if m.MissionItems[j].Lat > bbox.lamax {
-					bbox.lamax = m.MissionItems[j].Lat
+				if mm.Segment[i].MissionItems[j].Lat > bbox.lamax {
+					bbox.lamax = mm.Segment[i].MissionItems[j].Lat
 				}
-				if m.MissionItems[j].Lat < bbox.lamin {
-					bbox.lamin = m.MissionItems[j].Lat
+				if mm.Segment[i].MissionItems[j].Lat < bbox.lamin {
+					bbox.lamin = mm.Segment[i].MissionItems[j].Lat
 				}
-				if m.MissionItems[j].Lon > bbox.lomax {
-					bbox.lomax = m.MissionItems[j].Lon
+				if mm.Segment[i].MissionItems[j].Lon > bbox.lomax {
+					bbox.lomax = mm.Segment[i].MissionItems[j].Lon
 				}
-				if m.MissionItems[j].Lon < bbox.lomin {
-					bbox.lomin = m.MissionItems[j].Lon
+				if mm.Segment[i].MissionItems[j].Lon < bbox.lomin {
+					bbox.lomin = mm.Segment[i].MissionItems[j].Lon
 				}
 			}
 		}
 		if ni > 0 {
-			m.Metadata.Cx = cx / ni
-			m.Metadata.Cy = cy / ni
+			mm.Segment[i].Metadata.Cx = cx / ni
+			mm.Segment[i].Metadata.Cy = cy / ni
 		}
-		m.Metadata.Zoom = evince_zoom(bbox)
-		m.Metadata.Generator = "impload"
-		m.Metadata.Stamp = time.Now().Format(time.RFC3339)
+		mm.Segment[i].Metadata.Zoom = evince_zoom(bbox)
+		mm.Segment[i].Metadata.Generator = "impload"
+		mm.Segment[i].Metadata.Stamp = time.Now().Format(time.RFC3339)
 	}
 }
 

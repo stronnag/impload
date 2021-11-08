@@ -86,7 +86,7 @@ func do_clear(eeprom bool) {
 	s := MSPInit(devdesc)
 	m := &Mission{}
 	m.Version.Value = GetVersion()
-	item := MissionItem{No: 1, Lat: 0.0, Lon: 0.0, Alt: int32(25), Action: "RTH"}
+	item := MissionItem{No: 1, Lat: 0.0, Lon: 0.0, Alt: int32(25), Action: "RTH", Flag: 0xa5}
 	m.MissionItems = append(m.MissionItems, item)
 	mm := m.Generate_MultiMission()
 	s.upload(mm, eeprom)
