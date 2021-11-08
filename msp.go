@@ -586,7 +586,7 @@ func (m *MSPSerial) get_multi_index() {
 
 func (m *MSPSerial) set_multi_index(idx uint8) {
 	lstr := len(SETTING_STR)
-	buf := make([]byte, lstr+3)
+	buf := make([]byte, lstr+2)
 	copy(buf, SETTING_STR)
 	buf[lstr] = 0
 	buf[lstr+1] = idx

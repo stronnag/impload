@@ -269,7 +269,7 @@ func main() {
 			mparts := strings.Split(files[0], "=")
 			if len(mparts) == 2 {
 				mval, err := strconv.Atoi(mparts[1])
-				if err == nil && mval > 1 && mval < 10 {
+				if err == nil && mval >= 0 && mval < 10 {
 					do_set_multi_index(mval)
 				}
 			}
