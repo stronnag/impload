@@ -505,20 +505,18 @@ func (m *MSPSerial) download(eeprom bool) *MultiMission {
 	wp_count := v.data[3]
 
 	z := make([]byte, 1)
-	s := GetVersion()
-	mission := &Mission{}
-	mission.Version.Value = s
+	var mis = []MissionItem{}
 	for z[0] = 1; ; z[0]++ {
 		v := m.Wait_msp(msp_WP, z)
 		if v.len > 0 {
 			_, mi := deserialise_wp(v.data)
-			mission.MissionItems = append(mission.MissionItems, mi)
+			mis = append(mis, mi)
 			if z[0] == wp_count {
 				break
 			}
 		}
 	}
-	return mission.Generate_MultiMission()
+	return NewMultiMission(mis)
 }
 
 func deserialise_wp(b []byte) (bool, MissionItem) {

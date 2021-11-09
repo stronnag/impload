@@ -92,6 +92,7 @@ From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, s
 * test : tests communications with FC
 * clear : clear mission in volatile RAM (specifically, uploads a mission with just a single RTH WP, which is always safe).
 * erase : erases mission in EEPROM and clears mission in volatile RAM (specifically, uploads and stores a mission with just a single RTH WP, which is always safe).
+* multi, multi=n : inav 4.0+; gets / sets the `nav_wp_multi_mission_index` value.
 
 ## Examples
 
