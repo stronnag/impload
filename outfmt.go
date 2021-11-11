@@ -53,8 +53,11 @@ func (mm *MultiMission) Update_mission_meta() {
 		offlon, _ = strconv.ParseFloat(offsets[1], 64)
 	}
 
+	ino := 1
 	for i := range mm.Segment {
-		ino := 1
+		if *outfmt != "xml-ugly" {
+			ino = 1
+		}
 		var bbox = BBox{-999, 999, -999, 999}
 		var cx, cy, ni float64
 		for j := range mm.Segment[i].MissionItems {
