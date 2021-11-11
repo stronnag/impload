@@ -661,14 +661,14 @@ func read_xml_mission(dat []byte) *MultiMission {
 		switch se := t.(type) {
 		case xml.StartElement:
 			switch strings.ToLower(se.Name.Local) {
-			case "mission":
-			case "version":
+			case "mission", "MISSION":
+			case "version", "VERSION":
 				dec.DecodeElement(&v, &se)
-			case "mwp":
+			case "mwp", "meta":
 				var mwp MissionMWP
 				dec.DecodeElement(&mwp, &se)
 				mwps = append(mwps, mwp)
-			case "missionitem":
+			case "missionitem", "MISSIONITEM":
 				var mi MissionItem
 				dec.DecodeElement(&mi, &se)
 				mis = append(mis, mi)
