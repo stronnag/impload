@@ -1,4 +1,4 @@
 rule go
     command = CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -extldflags -static" -o $out
 
-build impload: go btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go  outfmt.go
+build impload: go btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go mission-read.go  outfmt.go

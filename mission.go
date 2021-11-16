@@ -70,13 +70,6 @@ type MissionItem struct {
 	Flag   uint8   `xml:"flag,attr,omitempty" json:"flag,omitempty"`
 }
 
-type MissionDetail struct {
-	Distance struct {
-		Units string  `xml:"units,attr,omitempty" json:"units,omitempty"`
-		Value int     `xml:"value,attr,omitempty" json:"value,omitempty"`
-	}  `xml:"distance,omitempty" json:"distance,omitempty"`
-}
-
 type MissionMWP struct {
 	Zoom      int     `xml:"zoom,attr" json:"zoom"`
 	Cx        float64 `xml:"cx,attr" json:"cx"`
@@ -90,6 +83,13 @@ type MissionMWP struct {
 
 type Version struct {
 	Value string `xml:"value,attr"`
+}
+
+type MissionDetail struct {
+	Distance struct {
+		Units string  `xml:"units,attr,omitempty" json:"units,omitempty"`
+		Value int     `xml:"value,attr,omitempty" json:"value,omitempty"`
+	}  `xml:"distance,omitempty" json:"distance,omitempty"`
 }
 
 type MissionSegment struct {
@@ -761,24 +761,6 @@ func read_inav_cli(dat []byte) *MultiMission {
 		}
 	}
 	return NewMultiMission(mis)
-}
-
-func Read_Mission_File(path string) (string, *MultiMission, error) {
-	var dat []byte
-	r, err := openStdinOrFile(path)
-	if err == nil {
-		defer r.Close()
-		dat, err = ioutil.ReadAll(r)
-	}
-	if err != nil {
-		return "?", nil, err
-	} else {
-		mtype, m := handle_mission_data(dat, path)
-		if m == nil || !m.is_valid() {
-			fmt.Fprintf(os.Stderr, "Note: Mission fails verification %s\n", mtype)
-		}
-		return mtype, m, nil
-	}
 }
 
 func handle_mission_data(dat []byte, path string) (string, *MultiMission) {
