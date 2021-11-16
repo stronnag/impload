@@ -70,6 +70,13 @@ type MissionItem struct {
 	Flag   uint8   `xml:"flag,attr,omitempty" json:"flag,omitempty"`
 }
 
+type MissionDetail struct {
+	Distance struct {
+		Units string  `xml:"units,attr,omitempty" json:"units,omitempty"`
+		Value int     `xml:"value,attr,omitempty" json:"value,omitempty"`
+	}  `xml:"distance,omitempty" json:"distance,omitempty"`
+}
+
 type MissionMWP struct {
 	Zoom      int     `xml:"zoom,attr" json:"zoom"`
 	Cx        float64 `xml:"cx,attr" json:"cx"`
@@ -78,6 +85,7 @@ type MissionMWP struct {
 	Homey     float64 `xml:"home-y,attr" json:"home-y"`
 	Stamp     string  `xml:"save-date,attr" json:"save-date"`
 	Generator string  `xml:"generator,attr" json:"generator"`
+	Details   MissionDetail  `xml:"details,omitempty" json:"details,omitempty"`
 }
 
 type Version struct {
