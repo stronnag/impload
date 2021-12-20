@@ -1,0 +1,33 @@
+site_name: impload
+some_url: https://github.com/stronnag/impload
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: blue
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - footnotes
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: "#"
+
+plugins:
+  - search
+  - macros
+
+nav:
+  - Home:
+      - index.md
+      - QGC-WP-110-supported-WP-types.md
+
+extra:
+    inav: "[inav](https://github.com/iNavFlight/inav)"
+    mwp: "[mwp](https://github.com/stronnag/mwptools)"
+    bbl2kml: "[bbl2kml](https://github.com/stronnag/bbl2kml)"
+    impload: "[impload](https://github.com/stronnag/impload)"

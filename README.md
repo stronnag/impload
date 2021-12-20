@@ -15,7 +15,7 @@ impload - iNav Mission Plan uploader
 
 Serial devices and TCP are supported for upload / download to / from flight controllers.
 
-Please see the [wiki user guide](https://github.com/stronnag/impload/wiki/impload-User-Guide) for more information and CSV format
+Please see the [user guide](https://stronnag.github.io/impload/) for more information.
 
 [YouTube Tutorial](https://www.youtube.com/watch?v=Mktmk_Y6PhM)
 
