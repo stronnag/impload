@@ -1,0 +1,622 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.3">
+    
+    
+      
+        <title>Index - impload</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.edf004c2.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.e6a45f82.min.css">
+        
+          
+          
+          <meta name="theme-color" content="#2094f3">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mission-file-formats" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="impload" class="md-header__button md-logo" aria-label="impload" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            impload
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Index
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="impload" class="md-nav__button md-logo" aria-label="impload" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    impload
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Home
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Home" data-md-level="1">
+        <label class="md-nav__title" for="__nav_1">
+          <span class="md-nav__icon md-icon"></span>
+          Home
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        Index
+      </a>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="QGC-WP-110-supported-WP-types/" class="md-nav__link">
+        Conversion between QGC waypoints and inav
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+<p><a href="https://github.com/stronnag/impload">impload</a>, aka <strong>inav Mission Plan Loader</strong>, is a cross-platform, command line tool to upload missions in  a number of file formats to inav. It can also download missions and convert between file formats.</p>
+<h1 id="mission-file-formats">Mission File formats<a class="headerlink" href="#mission-file-formats" title="Permanent link">#</a></h1>
+<p><a href="https://github.com/stronnag/impload">impload</a> supports the following file formats:</p>
+<ul>
+<li>
+<p>Multiwii XML. The mission file format used by inav mission planners such as <a href="https://github.com/stronnag/mwptools">mwp</a>, ezgui, mission planner for inav and the inav configurator.</p>
+</li>
+<li>
+<p>APMPlanner2 text files. Mission files generated by APMPlanner (and older qgroundcontrol); "QGC WPL 110" files.</p>
+</li>
+<li>
+<p>qgroundcontrol JSON Plan files (recent versions of qgroundcontrol), simple mission and complex (survey).</p>
+</li>
+<li>
+<p>GPX. A common format often used for GPS information. <a href="https://github.com/stronnag/impload">impload</a> works with GPX files containing tracks, routes or waypoints.</p>
+</li>
+<li>
+<p>KML (and KMZ). Another common format; the export format for a number of well known tools like Google Earth. Mission should be defined as 'paths'.</p>
+</li>
+<li>
+<p>mwp JSON format mission files.</p>
+</li>
+<li>
+<p>Simple CSV. See below for detail</p>
+</li>
+</ul>
+<h1 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">#</a></h1>
+<ul>
+<li>
+<p>Plan missions in apmplanner, (QGC WPL 110) upload (&amp; save) to iNav</p>
+</li>
+<li>
+<p>Plan missions in any GPX creating GIS tool</p>
+</li>
+<li>
+<p>Plan missions in Google Earth, save as KML, upload to FC</p>
+</li>
+<li>
+<p>Convert "alien" formats to MW-XML.</p>
+</li>
+</ul>
+<h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h1>
+<p>From source: <code>go get github.com/stronnag/impload</code>, binaries endup in <code>go/bin</code>, source in <code>go/src/github.com/stronnag/impload</code>. Requires <code>go</code> and <code>git</code>.</p>
+<p>Binaries in the Release area (linux ia32/x86_64/arm7, Win32, MacOS, FreeBSD) if you don’t want it build it locally. The <a href="https://github.com/stronnag/impload/releases">release area</a> provides
+standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, FreeBSD and Windows .</p>
+<h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
+<p>Run the executable for your platform in a terminal (Windows <code>cmd</code> or <code>powershell</code>). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. <code>-d COM7</code> on Windows, <code>-d /dev/tty.usbmodem14211</code> on MacO (where 14221 is possibly a random number).</p>
+<pre><code>$ impload --help
+Usage of impload [options] command [files ...]
+  -a int
+        Default altitude (m) (default 20)
+  -b int
+        Baud rate (default 115200)
+  -d string
+        Device Name
+  -force-land
+        Adds RTH / Land for 'external' formats
+  -force-rth
+        Adds RTH for 'external' formats
+  -s float
+        Default speed (m/s)
+  -v    Shows version
+  command
+    Action required (upload|download|store|restore|convert|test)
+
+impload v0.150.433 commit 9a82ede / 2018-05-30
+</code></pre>
+<h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">#</a></h2>
+<h3 id="upload">upload<a class="headerlink" href="#upload" title="Permanent link">#</a></h3>
+<p>The upload command uploads the specified file as a waypoint mission to the flight controller.</p>
+<h3 id="store">store<a class="headerlink" href="#store" title="Permanent link">#</a></h3>
+<p>The store command uploads the specified file as a waypoint mission to the flight controller and then instructs inav to save the mission to
+EEPROM.</p>
+<h3 id="download">download<a class="headerlink" href="#download" title="Permanent link">#</a></h3>
+<p>The download command downloads the waypoint mission in flight controller volatile memory to the specified file. The mission is always stored as an MW XML mission file.</p>
+<h3 id="restore">restore<a class="headerlink" href="#restore" title="Permanent link">#</a></h3>
+<p>The restore command instructs the flight controller to restore a mission previously saved to EEPROM into volatile memory, and then downloads the mission to a file (as for the download command).</p>
+<h3 id="convert">convert<a class="headerlink" href="#convert" title="Permanent link">#</a></h3>
+<p>The convert command converts the first file into an MW XML mission file with the second file name.</p>
+<h3 id="test">test<a class="headerlink" href="#test" title="Permanent link">#</a></h3>
+<p>The test command establishes communications with the flight controller and reports the FC name and build, as well as the contents of volatile mission memory.</p>
+<h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">#</a></h2>
+<p>Options start with a hyphen and must precede the command being run. On Linux, <a href="https://github.com/stronnag/impload">impload</a> will attempt to access <code>/dev/ttyACM0</code> and <code>/dev/ttyUSB0</code>, so the device does not need to be specified if using these device nodes. On Windows and MacOS, it is
+necessary to specify the device name / node.</p>
+<ul>
+<li>
+<p>-d device : define the device name</p>
+</li>
+<li>
+<p>-b baudrate : define the baud rate (if not 115200 baud)</p>
+</li>
+<li>
+<p>-a default-altitude : sets the default altitude unless it’s otherwise defined. MW XML mission files, apm mission files and CSV <em>may</em> define altitude values, so the default value given on the command line is only used for missing (zero) values. The value is in metres.</p>
+</li>
+<li>
+<p>-s default-speed : defines the default speed. This is used where a leg speed is not set in the input mission file. MW XML mission file, mwp-json and QGC (apmplanner2, qgroundcontrol) are the only formats that specify a speed value. If not set, the mission is flown at the speed set in FC configuration.</p>
+</li>
+<li>
+<p>-force-rth : For GPX only, adds RTH after the final waypoint.</p>
+</li>
+<li>
+<p>-force-land. For GPX only, adds RTH with land after the final waypoint.</p>
+</li>
+</ul>
+<h3 id="device-names">Device Names<a class="headerlink" href="#device-names" title="Permanent link">#</a></h3>
+<p>impload supports a subset of the mwp device naming scheme:</p>
+<ul>
+<li>
+<p><code>serial_device[@baudrate]</code></p>
+</li>
+<li>
+<p><code>tcp://host:port</code></p>
+</li>
+<li>
+<p><code>udp://remotehost:remote_port</code></p>
+</li>
+<li>
+<p><code>udp://local_host:local_port/remote_host:remote_port</code></p>
+</li>
+</ul>
+<p>The baud rate given as an extended device name is preferred to -b</p>
+<p>For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the latter form is required.</p>
+<h3 id="device-name-examples">Device Name examples<a class="headerlink" href="#device-name-examples" title="Permanent link">#</a></h3>
+<pre><code>/dev/ttyUSB0@57600
+/dev/ttyACM0
+COM17@115200
+tcp://esp8266:23
+udp://:14014/esp-air:14014
+# both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
+</code></pre>
+<h2 id="files">Files<a class="headerlink" href="#files" title="Permanent link">#</a></h2>
+<p>The <a href="https://github.com/stronnag/impload">impload</a> commands require zero, one or two file names. If file names are missing or are a single hyphen, then stdin (standard input) is used for readings and stdout (standard output) is used for writing. This allows pipelines to be used.</p>
+<h1 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">#</a></h1>
+<h2 id="convert-a-gpx-track-file-to-mw-xml-mission-file">Convert a GPX track file to MW XML mission file<a class="headerlink" href="#convert-a-gpx-track-file-to-mw-xml-mission-file" title="Permanent link">#</a></h2>
+<pre><code>$ impload convert test.gpx gpx_trk.mission
+</code></pre>
+<h2 id="store-a-apmplanner2-mission-file-to-eeprom">Store a apmplanner2 mission file to EEPROM<a class="headerlink" href="#store-a-apmplanner2-mission-file-to-eeprom" title="Permanent link">#</a></h2>
+<p>impload supports the following QGC WP types:</p>
+<ul>
+<li>
+<p>Waypoint (16)</p>
+</li>
+<li>
+<p>Poshold_time (19)</p>
+</li>
+<li>
+<p>RTH (20)</p>
+</li>
+<li>
+<p>Land (21)</p>
+</li>
+<li>
+<p>Jump (177)</p>
+</li>
+<li>
+<p>SET_ROI (201)</p>
+</li>
+<li>
+<p>DO_SET_ROI_LOCATION (195)</p>
+</li>
+<li>
+<p>DO_SET_ROI_NONE (197)</p>
+</li>
+<li>
+<p>DO_CONDITION_YAW (115)</p>
+</li>
+</ul>
+<p>with the following recommendations / restrictions:</p>
+<ul>
+<li>
+<p>Provide explicit positions rather that 'use previous' values</p>
+</li>
+<li>
+<p>Jump to geo-referenced WPs</p>
+</li>
+</ul>
+<p><a href="https://github.com/stronnag/impload/wiki/QGC-WP-110-supported-WP-types">Tabular list of WP types</a> showing conversions and more detail on the ROI / YAW settings and restrictions.</p>
+<pre><code>$ impload store samples/qpc_0.txt
+2018/05/24 18:09:10 Using device /dev/ttyUSB0 115200
+INAV v2.0.0 SPRACINGF3 (e7ca7944) API 2.2 "vtail"
+Waypoints: 0 of 60, valid 0
+upload 12, save true
+Saved Mission
+Waypoints: 12 of 60, valid 1
+</code></pre>
+<h2 id="upload-a-kml-file-to-inav">Upload a KML file to inav<a class="headerlink" href="#upload-a-kml-file-to-inav" title="Permanent link">#</a></h2>
+<pre><code>$ impload upload samples/google-earth-mission.kml
+2018/05/29 20:07:26 Using device /dev/ttyUSB0 115200
+INAV v2.0.0 SPRACINGF3 (6ccd0cc9) API 2.2 "vtail"
+Waypoints: 0 of 60, valid 0
+upload 9, save false
+Waypoints: 9 of 60, valid 1
+</code></pre>
+<h2 id="sample-images">Sample Images<a class="headerlink" href="#sample-images" title="Permanent link">#</a></h2>
+<p>Note that 'home' is notional in all cases, as we’re not at the field. It is not required by inav mission planners (<a href="https://github.com/stronnag/mwptools">mwp</a>, ezgui, mission planner for
+inav et al).</p>
+<h3 id="qgc-survey">QGC Survey<a class="headerlink" href="#qgc-survey" title="Permanent link">#</a></h3>
+<p>Original survey plan:</p>
+<p><img alt="qgc" src="images/qgc-survey.png" /></p>
+<p>In <a href="https://github.com/stronnag/mwptools">mwp</a> after <code>impload convert</code>:</p>
+<p><img alt="mwp" src="images/mwp-survey-qgc.png" /></p>
+<h3 id="sample-qgc-in-apmplanner2">Sample QGC in apmplanner2<a class="headerlink" href="#sample-qgc-in-apmplanner2" title="Permanent link">#</a></h3>
+<p>Note that WP 0 is 'home' and doesn’t count; WP 12 indicates RTH.</p>
+<p><img alt="apm" src="images/sample-mission.png" /></p>
+<h3 id="sample-qgc-in-apmplanner2_1">Sample QGC in apmplanner2<a class="headerlink" href="#sample-qgc-in-apmplanner2_1" title="Permanent link">#</a></h3>
+<p><img alt="apm" src="images/sample-qgc.png" /></p>
+<h3 id="sample-in-mwp">Sample in <a href="https://github.com/stronnag/mwptools">mwp</a><a class="headerlink" href="#sample-in-mwp" title="Permanent link">#</a></h3>
+<p>The sample apm text file was uploaded to the FC, and downloaded into <a href="https://github.com/stronnag/mwptools">mwp</a>.</p>
+<p><img alt="apm" src="images/mwp_mission.png" /></p>
+<h3 id="sample-as-gpx">Sample as GPX<a class="headerlink" href="#sample-as-gpx" title="Permanent link">#</a></h3>
+<p>The sample apm file as converted to an MW XML mission, then to a GPX
+(using mwptools' <a href="https://github.com/stronnag/mwptools/blob/master/samples/mission2gpx.rb">mission2gpx.rb</a>), then loaded into the FC. Somewhat contrived use case.</p>
+<p><img alt="apm" src="images/viking-gpx.png" /></p>
+<pre><code>$ impload convert samples/qpc_1.txt /tmp/qpc_1.mission
+$ mission2gpx.rb /tmp/qpc_1.mission /tmp/qpc_1_trk.gpx
+$ impload store tmp/qpc_1_trk.gpx
+</code></pre>
+<h1 id="csv-format">CSV Format<a class="headerlink" href="#csv-format" title="Permanent link">#</a></h1>
+<p><a href="https://github.com/stronnag/impload">impload</a> can upload and convert missions defined by a simple CSV file. The header line <strong>must</strong> be present and must be one of:</p>
+<pre><code>no,wp,lat,lon,alt,p1,p2
+</code></pre>
+<p>or</p>
+<pre><code>wp,lat,lon,alt,p1,p2
+</code></pre>
+<p>i.e. the waypoint number is optional.</p>
+<p>As of impload v3.021.370 (2021-01-21), impload supports all the inav 2.6 waypoint types, as either text or numeric values for CSV import.</p>
+<p>Sample files:</p>
+<pre><code>no,wp,lat,lon,alt,p1,p2
+1,WAYPOINT,54.353319318038153,-4.5179273723848077,35,0.0,0
+2,WAYPOINT,54.353572350395972,-4.5193913118652516,35,0.0,0
+3,WAYPOINT,54.354454163955907,-4.5196617811150759,50,0.0,0
+4,WAYPOINT,54.354657830207479,-4.5186895986330455,50,0.0,0
+5,JUMP,0,0,0,2,2
+6,WAYPOINT,54.354668848061756,-4.5176009696657218,35,0.0,0
+7,WAYPOINT,54.354122567317191,-4.5172673708680122,35,0.0,0
+8,JUMP,0,0,0,1,1
+9,POSHOLD_TIME,54.353138333126651,-4.5190405596657968,35,45,0.0
+10,WAYPOINT,54.354847022143616,-4.518210497615712,35,0.0,0
+11,LAND,54.354052100964488,-4.5178091504726012,60,0,0
+</code></pre>
+<p>and without numbers, and 'lazy' wp name and some numeric values.</p>
+<pre><code>wp,lat,lon,alt,p1,p2
+WP,54.353319318038153,-4.5179273723848077,35,0.0,0
+WP,54.353572350395972,-4.5193913118652516,35,0.0,0
+WP,54.354454163955907,-4.5196617811150759,50,0.0,0
+WP,54.354657830207479,-4.5186895986330455,50,0.0,0
+JUMP,0,0,0,2,2
+WP,54.354668848061756,-4.5176009696657218,35,0.0,0
+WP,54.354122567317191,-4.5172673708680122,35,0.0,0
+6,0,0,0,1,1
+POSHOLD_TIME,54.353138333126651,-4.5190405596657968,35,45,0.0
+WP,54.354847022143616,-4.518210497615712,35,0.0,0
+8,54.354052100964488,-4.5178091504726012,60,0,0
+</code></pre>
+<p>Both result in the following XML mission file:</p>
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;mission&gt;
+  &lt;!--Created by "impload" v2.087.278 on 2020-03-27T07:47:46Z
+      &lt;https://github.com/stronnag/impload&gt;
+  --&gt;
+  &lt;version value="impload v2.087.278"/&gt;
+  &lt;missionitem no="1" action="WAYPOINT" lat="54.35331931803815" lon="-4.517927372384808" alt="35" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="2" action="WAYPOINT" lat="54.35357235039597" lon="-4.519391311865252" alt="35" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="3" action="WAYPOINT" lat="54.35445416395591" lon="-4.519661781115076" alt="50" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="4" action="WAYPOINT" lat="54.35465783020748" lon="-4.5186895986330455" alt="50" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="5" action="JUMP" lat="0" lon="0" alt="0" parameter1="2" parameter2="2" parameter3="0"/&gt;
+  &lt;missionitem no="6" action="WAYPOINT" lat="54.354668848061756" lon="-4.517600969665722" alt="35" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="7" action="WAYPOINT" lat="54.35412256731719" lon="-4.517267370868012" alt="35" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="8" action="JUMP" lat="0" lon="0" alt="0" parameter1="1" parameter2="1" parameter3="0"/&gt;
+  &lt;missionitem no="9" action="POSHOLD_TIME" lat="54.35313833312665" lon="-4.519040559665797" alt="35" parameter1="45" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="10" action="WAYPOINT" lat="54.354847022143616" lon="-4.518210497615712" alt="35" parameter1="0" parameter2="0" parameter3="0"/&gt;
+  &lt;missionitem no="11" action="LAND" lat="54.35405210096449" lon="-4.517809150472601" alt="60" parameter1="0" parameter2="0" parameter3="0"/&gt;
+&lt;/mission&gt;
+</code></pre>
+<p>Note that <code>p1</code> (aka <code>parameter1</code> in MW XML) is the leg speed (m/s) for WAYPOINTs and the landing flag for RTH (1 = land). <code>alt</code> (altitude) is integer metres. These parameters (and others) are fully described in <a href="https://github.com/iNavFlight/inav/wiki/MSP-Navigation-Messages">the inav wiki</a>. There is also an animated preview of this mission <a href="https://youtu.be/MTA42WUOjUY">as a short youtube
+video</a>.</p>
+<h2 id="csv-upload-visualised-in-mwp">CSV upload visualised in mwp<a class="headerlink" href="#csv-upload-visualised-in-mwp" title="Permanent link">#</a></h2>
+<p><img alt="mwp/csv" src="images/eg_complex_mission.png" /></p>
+<h1 id="note-also">Note also<a class="headerlink" href="#note-also" title="Permanent link">#</a></h1>
+<ul>
+<li>impload enforces <a href="https://github.com/iNavFlight/inav/wiki/MSP-Navigation-Messages">inav mission sanity rules</a>.</li>
+</ul>
+<h1 id="postscript">Postscript<a class="headerlink" href="#postscript" title="Permanent link">#</a></h1>
+<p>The author knows how to spell "implode".</p>
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+      
+        
+        <a href="QGC-WP-110-supported-WP-types/" class="md-footer__link md-footer__link--next" aria-label="Next: Conversion between QGC waypoints and inav" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Conversion between QGC waypoints and inav
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.0bbba5b5.min.js"}</script>
+    
+    
+      <script src="assets/javascripts/bundle.e1a181d9.min.js"></script>
+      
+    
+  </body>
+</html>
