@@ -338,26 +338,29 @@
 standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, FreeBSD and Windows .</p>
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
 <p>Run the executable for your platform in a terminal (Windows <code>cmd</code> or <code>powershell</code>). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. <code>-d COM7</code> on Windows, <code>-d /dev/tty.usbmodem14211</code> on MacO (where 14221 is possibly a random number).</p>
-<pre><code>$ impload --help
+<div class="highlight"><pre><span></span><code>$ impload -help
 Usage of impload [options] command [files ...]
+Options:
   -a int
         Default altitude (m) (default 20)
   -b int
         Baud rate (default 115200)
   -d string
-        Device Name
+        Serial Device
+  -fmt string
+        Output format (xml, json, cli, xml-ugly) (default &quot;xml&quot;)
   -force-land
-        Adds RTH / Land for 'external' formats
+        Adds RTH / Land for &#39;external&#39; formats
   -force-rth
-        Adds RTH for 'external' formats
+        Adds RTH for &#39;external&#39; formats
   -s float
         Default speed (m/s)
   -v    Shows version
-  command
-    Action required (upload|download|store|restore|convert|test)
+  command:
+    Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
-impload v0.150.433 commit 9a82ede / 2018-05-30
-</code></pre>
+impload v3.320.671, commit: c4c057e / 2021-11-16
+</code></pre></div>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">#</a></h2>
 <h3 id="upload">upload<a class="headerlink" href="#upload" title="Permanent link">#</a></h3>
 <p>The upload command uploads the specified file as a waypoint mission to the flight controller.</p>
@@ -372,6 +375,8 @@ EEPROM.</p>
 <p>The convert command converts the first file into an MW XML mission file with the second file name.</p>
 <h3 id="test">test<a class="headerlink" href="#test" title="Permanent link">#</a></h3>
 <p>The test command establishes communications with the flight controller and reports the FC name and build, as well as the contents of volatile mission memory.</p>
+<h3 id="multin">multi[=n]<a class="headerlink" href="#multin" title="Permanent link">#</a></h3>
+<p>Gets (<code>multi</code>) or sets (<code>multi=n</code>) the current active multi-mission Id.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">#</a></h2>
 <p>Options start with a hyphen and must precede the command being run. On Linux, <a href="https://github.com/stronnag/impload">impload</a> will attempt to access <code>/dev/ttyACM0</code> and <code>/dev/ttyUSB0</code>, so the device does not need to be specified if using these device nodes. On Windows and MacOS, it is
 necessary to specify the device name / node.</p>
