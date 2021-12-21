@@ -1,11 +1,17 @@
 site_name: impload
 some_url: https://github.com/stronnag/impload
+site_author: Jonathan Hudson
+copyright: Copyright &copy; 2021 <a href="https://github.com/stronnag/impload">Jonathan Hudson</a>
 
 theme:
   name: material
   palette:
     scheme: slate
-    primary: blue
+    primary: grey
+    accent: dark orange
+  font:
+    text: Roboto
+    code: Roboto Mono
 
 markdown_extensions:
   - admonition
@@ -20,6 +26,20 @@ markdown_extensions:
 plugins:
   - search
   - macros
+  - with-pdf:
+      cover_subtitle: inav Mission Plan tool
+      toc_level: 3
+      output_path: ../impload.pdf
+      enabled_if_env: ENABLE_PDF_EXPORT
+      copyright: (c) Jonathan Hudson 2021
+      convert_iframe:
+        - src: https://www.youtube.com/embed/Mktmk_Y6PhM
+          img: https://i9.ytimg.com/vi/Mktmk_Y6PhM/mq3.jpg?sqp=CPjlh44G&rs=AOn4CLDFN9gV8irDXS8_w8IJh_anhVL2Bw
+          text: Youtube video
+
+extra_css:
+  - assets/extra.css
+  - assets/pdf.css
 
 nav:
   - Home:

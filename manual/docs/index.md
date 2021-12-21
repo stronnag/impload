@@ -30,6 +30,10 @@ Use Cases
 
 -   Convert "alien" formats to MW-XML.
 
+## Youtube tutorial
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Mktmk_Y6PhM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Installation
 ============
 
