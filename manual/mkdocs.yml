@@ -35,7 +35,8 @@ plugins:
       convert_iframe:
         - src: https://www.youtube.com/embed/Mktmk_Y6PhM
           img: https://i9.ytimg.com/vi/Mktmk_Y6PhM/mq3.jpg?sqp=CPjlh44G&rs=AOn4CLDFN9gV8irDXS8_w8IJh_anhVL2Bw
-          text: Youtube video
+        - src: https://player.vimeo.com/video/268036585?h=e81256c10e
+          text: Vimeo Video
 
 extra_css:
   - assets/extra.css
