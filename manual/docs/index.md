@@ -47,25 +47,30 @@ Usage
 
 Run the executable for your platform in a terminal (Windows `cmd` or `powershell`). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. `-d COM7` on Windows, `-d /dev/tty.usbmodem14211` on MacO (where 14221 is possibly a random number).
 
-    $ impload --help
-    Usage of impload [options] command [files ...]
-      -a int
-            Default altitude (m) (default 20)
-      -b int
-            Baud rate (default 115200)
-      -d string
-            Device Name
-      -force-land
-            Adds RTH / Land for 'external' formats
-      -force-rth
-            Adds RTH for 'external' formats
-      -s float
-            Default speed (m/s)
-      -v    Shows version
-      command
-        Action required (upload|download|store|restore|convert|test)
+```
+$ impload -help
+Usage of impload [options] command [files ...]
+Options:
+  -a int
+    	Default altitude (m) (default 20)
+  -b int
+    	Baud rate (default 115200)
+  -d string
+    	Serial Device
+  -fmt string
+    	Output format (xml, json, cli, xml-ugly) (default "xml")
+  -force-land
+    	Adds RTH / Land for 'external' formats
+  -force-rth
+    	Adds RTH for 'external' formats
+  -s float
+    	Default speed (m/s)
+  -v	Shows version
+  command:
+	Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
-    impload v0.150.433 commit 9a82ede / 2018-05-30
+impload v3.320.671, commit: c4c057e / 2021-11-16
+```
 
 Commands
 --------
@@ -94,6 +99,10 @@ The convert command converts the first file into an MW XML mission file with the
 ### test
 
 The test command establishes communications with the flight controller and reports the FC name and build, as well as the contents of volatile mission memory.
+
+### multi[=n]
+
+Gets (`multi`) or sets (`multi=n`) the current active multi-mission Id.
 
 Options
 -------
