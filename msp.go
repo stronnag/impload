@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 )
 
 const (
@@ -558,8 +559,10 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 		if eeprom {
 			z := make([]byte, 1)
 			z[0] = 1
+			t := time.Now()
 			s.Wait_msp(msp_WP_MISSION_SAVE, z)
-			fmt.Fprintf(os.Stderr, "Saved mission\n")
+			et := time.Since(t)
+			fmt.Fprintf(os.Stderr, "Saved mission (%s)\n", et)
 		}
 		v := s.Wait_msp(msp_WP_GETINFO, nil)
 		wp_max := v.data[1]

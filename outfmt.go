@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
 	"encoding/xml"
-	"time"
+	"fmt"
 	"math"
-	"path"
-	"strings"
 	"os"
+	"path"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type BBox struct {
@@ -65,6 +65,15 @@ func (mm *MultiMission) Update_mission_meta() {
 			ino++
 
 			if mm.Segment[i].MissionItems[j].is_GeoPoint() {
+				if mm.Segment[i].MissionItems[j].Lat == 0 &&
+					mm.Segment[i].MissionItems[j].Lon == 0 {
+					mm.Segment[i].MissionItems[j].Flag = 0x48
+				}
+				if mm.Segment[i].MissionItems[j].Flag == 0x48 {
+					mm.Segment[i].MissionItems[j].Lat = mm.Segment[i].Metadata.Homey
+					mm.Segment[i].MissionItems[j].Lon = mm.Segment[i].Metadata.Homex
+				}
+
 				if moving != "" {
 					mm.Segment[i].MissionItems[j].Lat += offlat
 					mm.Segment[i].MissionItems[j].Lon += offlon
