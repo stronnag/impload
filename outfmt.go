@@ -69,9 +69,14 @@ func (mm *MultiMission) Update_mission_meta() {
 					mm.Segment[i].MissionItems[j].Lon == 0 {
 					mm.Segment[i].MissionItems[j].Flag = 0x48
 				}
+
 				if mm.Segment[i].MissionItems[j].Flag == 0x48 {
-					mm.Segment[i].MissionItems[j].Lat = mm.Segment[i].Metadata.Homey
-					mm.Segment[i].MissionItems[j].Lon = mm.Segment[i].Metadata.Homex
+					if mm.Segment[i].MissionItems[j].Lat == 0 {
+						mm.Segment[i].MissionItems[j].Lat = mm.Segment[i].Metadata.Homey
+					}
+					if mm.Segment[i].MissionItems[j].Lon == 0 {
+						mm.Segment[i].MissionItems[j].Lon = mm.Segment[i].Metadata.Homex
+					}
 				}
 
 				if moving != "" {
