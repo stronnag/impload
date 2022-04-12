@@ -150,7 +150,7 @@ func check_device() DevDescription {
 		}
 	}
 
-	if devdesc.name == "" {
+	if devdesc.name == "" && devdesc.klass == DevClass_SERIAL {
 		log.Fatalln("No device available")
 	} else {
 		log.Printf("Using device [%v]\n", devdesc.name)
@@ -180,7 +180,6 @@ func resolve_default_gw() string {
 	}
 	return "__MWP_SERIAL_HOST"
 }
-
 
 func parse_device() DevDescription {
 	dd := DevDescription{name: "", klass: DevClass_NONE}
