@@ -132,11 +132,11 @@ impload supports a subset of the mwp device naming scheme:
 
 -   `udp://remotehost:remote_port`
 
--   `udp://local_host:local_port/remote_host:remote_port`
+-   `udp://local_host:local_port/remote_host:remote_port` or `udp://remotehost:remote_port/?bind=port`
 
 The baud rate given as an extended device name is preferred to -b
 
-For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the latter form is required.
+For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), one of the latter forms is required, as the same port must be used locally and remotely.
 
 ### Device Name examples
 
@@ -145,7 +145,8 @@ For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the 
     COM17@115200
     tcp://esp8266:23
     udp://:14014/esp-air:14014
-    # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
+    # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY. Last above is same as:
+	udp://esp-air:14014/?bind=14014
 
 Files
 -----
