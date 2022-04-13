@@ -4,9 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -138,22 +139,23 @@ func verify_in_out_files(files []string) (string, string) {
 }
 
 func check_device() DevDescription {
-	devdesc := parse_device()
-	if devdesc.name == "" {
+	devdesc := parse_device(*device)
+	if devdesc.klass == DevClass_NONE {
 		for _, v := range []string{"/dev/ttyACM0", "/dev/ttyUSB0"} {
 			if _, err := os.Stat(v); err == nil {
 				devdesc.klass = DevClass_SERIAL
 				devdesc.name = v
+				*device = v
 				devdesc.param = *baud
 				break
 			}
 		}
 	}
 
-	if devdesc.name == "" && devdesc.klass == DevClass_SERIAL {
+	if devdesc.klass == DevClass_NONE {
 		log.Fatalln("No device available")
 	} else {
-		log.Printf("Using device [%v]\n", devdesc.name)
+		log.Printf("Using device [%v]\n", *device)
 	}
 	return devdesc
 }
@@ -181,40 +183,74 @@ func resolve_default_gw() string {
 	return "__MWP_SERIAL_HOST"
 }
 
-func parse_device() DevDescription {
-	dd := DevDescription{name: "", klass: DevClass_NONE}
-	r := regexp.MustCompile(`^(tcp|udp)://(__MWP_SERIAL_HOST|[\[\]:A-Za-z\-\.0-9]*):(\d+)/{0,1}([A-Za-z\-\.0-9]*):{0,1}(\d*)`)
-	m := r.FindAllStringSubmatch(*device, -1)
-	if len(m) > 0 {
-		if m[0][1] == "tcp" {
-			dd.klass = DevClass_TCP
+func splithost(uhost string) (string, int) {
+	port := -1
+	host := ""
+	if uhost != "" {
+		if h, p, err := net.SplitHostPort(uhost); err != nil {
+			host = uhost
 		} else {
-			dd.klass = DevClass_UDP
+			host = h
+			port, _ = strconv.Atoi(p)
 		}
-		dd.name = m[0][2]
-		if dd.name == "__MWP_SERIAL_HOST" {
-			dd.name = resolve_default_gw()
-		}
-		dd.param, _ = strconv.Atoi(m[0][3])
-		// These are only used for ESP8266 UDP
-		dd.name1 = m[0][4]
-		dd.param1, _ = strconv.Atoi(m[0][5])
-	} else if len(*device) == 17 && (*device)[2] == ':' && (*device)[8] == ':' && (*device)[14] == ':' {
-		dd.name = *device
+	}
+	return host, port
+}
+
+func parse_device(devstr string) DevDescription {
+	dd := DevDescription{name: "", klass: DevClass_NONE}
+	if devstr == "" {
+		return dd
+	}
+
+	if len(devstr) == 17 && (devstr)[2] == ':' && (devstr)[8] == ':' && (devstr)[14] == ':' {
+		dd.name = devstr
 		dd.klass = DevClass_BT
 	} else {
-		ss := strings.Split(*device, "@")
-		dd.klass = DevClass_SERIAL
-		dd.name = ss[0]
-		if len(ss) > 1 {
-			dd.param, _ = strconv.Atoi(ss[1])
-		} else {
-			dd.param = *baud
+		u, err := url.Parse(devstr)
+		if err == nil {
+			if u.Scheme == "tcp" {
+				dd.klass = DevClass_TCP
+			} else if u.Scheme == "udp" {
+				dd.klass = DevClass_UDP
+			}
+
+			if u.Scheme == "" {
+				ss := strings.Split(u.Path, "@")
+				dd.klass = DevClass_SERIAL
+				dd.name = ss[0]
+				if len(ss) > 1 {
+					dd.param, _ = strconv.Atoi(ss[1])
+				} else {
+					dd.param = 115200
+				}
+			} else {
+				if u.RawQuery != "" {
+					m, err := url.ParseQuery(u.RawQuery)
+					if err == nil {
+						if p, ok := m["bind"]; ok {
+							dd.param, _ = strconv.Atoi(p[0])
+						}
+						dd.name1, dd.param1 = splithost(u.Host)
+					}
+				} else {
+					if u.Path != "" {
+						parts := strings.Split(u.Path, ":")
+						if len(parts) == 2 {
+							dd.name1 = parts[0][1:]
+							dd.param1, _ = strconv.Atoi(parts[1])
+						}
+					}
+					dd.name, dd.param = splithost(u.Host)
+					if dd.name == "__MWP_SERIAL_HOST" {
+						dd.name = resolve_default_gw()
+					}
+				}
+			}
 		}
 	}
 	return dd
 }
-
 func main() {
 
 	flag.Usage = func() {
