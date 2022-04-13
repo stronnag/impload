@@ -136,7 +136,7 @@ impload supports a subset of the mwp device naming scheme:
 
 The baud rate given as an extended device name is preferred to -b
 
-For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), one of the latter forms is required, as the same port must be used locally and remotely.
+For ESP8266 transparent serial over UDP (the recommended mode for ESP8266), one of the latter forms is required, as the same port must be used locally and remotely.
 
 ### Device Name examples
 
