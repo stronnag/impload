@@ -338,7 +338,7 @@
 standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, FreeBSD and Windows .</p>
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
 <p>Run the executable for your platform in a terminal (Windows <code>cmd</code> or <code>powershell</code>). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. <code>-d COM7</code> on Windows, <code>-d /dev/tty.usbmodem14211</code> on MacO (where 14221 is possibly a random number).</p>
-<div class="highlight"><pre><span></span><code>$ impload -help
+<pre><code>$ impload -help
 Usage of impload [options] command [files ...]
 Options:
   -a int
@@ -348,11 +348,11 @@ Options:
   -d string
         Serial Device
   -fmt string
-        Output format (xml, json, cli, xml-ugly) (default &quot;xml&quot;)
+        Output format (xml, json, cli, xml-ugly) (default "xml")
   -force-land
-        Adds RTH / Land for &#39;external&#39; formats
+        Adds RTH / Land for 'external' formats
   -force-rth
-        Adds RTH for &#39;external&#39; formats
+        Adds RTH for 'external' formats
   -s float
         Default speed (m/s)
   -v    Shows version
@@ -360,7 +360,7 @@ Options:
     Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
 impload v3.320.671, commit: c4c057e / 2021-11-16
-</code></pre></div>
+</code></pre>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">#</a></h2>
 <h3 id="upload">upload<a class="headerlink" href="#upload" title="Permanent link">#</a></h3>
 <p>The upload command uploads the specified file as a waypoint mission to the flight controller.</p>
