@@ -39,7 +39,9 @@ var (
 	force_land = flag.Bool("force-land", false, "Adds RTH / Land for 'external' formats")
 	show_vers  = flag.Bool("v", false, "Shows version")
 	outfmt     = flag.String("fmt", "xml", "Output format (xml, json, cli, xml-ugly)")
-	MaxWP      = 60
+	verbose    = flag.Bool("verbose", false, "Verbose")
+
+	MaxWP = 60
 )
 
 var GitCommit = "local"

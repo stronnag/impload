@@ -86,6 +86,7 @@ type MSPSerial struct {
 
 var (
 	Wp_count byte
+	use_v2   bool
 )
 
 func crc8_dvb_s2(crc byte, a byte) byte {
@@ -340,10 +341,10 @@ func (m *MSPSerial) Send_msp(cmd uint16, payload []byte) {
 
 func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
 	var buf []byte
-	if cmd < 256 {
-		buf = encode_msp(cmd, payload)
-	} else {
+	if use_v2 || cmd > 255 {
 		buf = encode_msp2(cmd, payload)
+	} else {
+		buf = encode_msp(cmd, payload)
 	}
 	m.sd.Write(buf)
 
@@ -354,6 +355,8 @@ func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
 			if v.cmd == cmd {
 				done = true
 			}
+		case <-time.After(time.Second * 5):
+			log.Fatalln("MSP timeout")
 		}
 	}
 	return v
@@ -375,6 +378,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 			case msp_API_VERSION:
 				if v.len > 2 {
 					api = fmt.Sprintf("%d.%d", v.data[1], v.data[2])
+					use_v2 = (v.data[1] == 2)
 					m.Send_msp(msp_FC_VARIANT, nil)
 				}
 			case msp_FC_VARIANT:
@@ -392,13 +396,13 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				} else {
 					board = string(v.data[0:4])
 				}
-				fmt.Fprintf(os.Stderr, "%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
+				fmt.Printf("%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
 				m.Send_msp(msp_NAME, nil)
 			case msp_NAME:
 				if v.len > 0 {
-					fmt.Fprintf(os.Stderr, " \"%s\"\n", v.data)
+					fmt.Printf(" \"%s\"\n", v.data)
 				} else {
-					fmt.Fprintln(os.Stderr, "")
+					fmt.Println()
 				}
 				if Wp_count == 0 {
 					z := make([]byte, 1)
@@ -414,7 +418,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				MaxWP = int(wp_max)
 				wp_valid := v.data[2]
 				Wp_count = v.data[3]
-				fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", Wp_count, wp_max, wp_valid)
+				fmt.Printf("Extant waypoints in FC: %d of %d, valid %d\n", Wp_count, wp_max, wp_valid)
 				done = true
 			default:
 				fmt.Fprintf(os.Stderr, "Unsolicited %d, length %d\n", v.cmd, v.len)
@@ -475,7 +479,7 @@ func Encode_action(a string) byte {
 }
 
 func serialise_wp(mi MissionItem, last bool) (int, []byte) {
-	buf := make([]byte, 32)
+	buf := make([]byte, 21)
 	buf[0] = byte(mi.No)
 	buf[1] = Encode_action(mi.Action)
 	v := int32(mi.Lat * 1e7)
@@ -486,11 +490,7 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	binary.LittleEndian.PutUint16(buf[14:16], uint16(mi.P1))
 	binary.LittleEndian.PutUint16(buf[16:18], uint16(mi.P2))
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(mi.P3))
-	if last {
-		buf[20] = 0xa5
-	} else {
-		buf[20] = mi.Flag
-	}
+	buf[20] = mi.Flag
 	return len(buf), buf
 }
 
@@ -499,7 +499,7 @@ func (m *MSPSerial) download(eeprom bool) *MultiMission {
 		z := make([]byte, 1)
 		z[0] = 1
 		m.Wait_msp(msp_WP_MISSION_LOAD, z)
-		fmt.Fprintf(os.Stderr, "Restored mission\n")
+		fmt.Printf("Restored mission\n")
 	}
 
 	v := m.Wait_msp(msp_WP_GETINFO, nil)
@@ -537,6 +537,9 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	p3 = int16(binary.LittleEndian.Uint16(b[18:20]))
 	last := (b[20] == 0xa5)
 	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3, Flag: b[20]}
+	if *verbose {
+		fmt.Printf("D: %d %d\n", b[0], b[20])
+	}
 	return last, item
 }
 
@@ -547,14 +550,22 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 		for _, ms := range mm.Segment {
 			mlen := len(ms.MissionItems)
 			for _, v := range ms.MissionItems {
-				fmt.Fprintf(os.Stderr, "Upload %d\r", i)
 				i++
 				v.No = i
+				if *verbose == false {
+					fmt.Printf("Upload %d\r", i)
+				}
 				_, b := serialise_wp(v, (i == mlen))
+				if *verbose {
+					fmt.Fprintf(os.Stderr, "Buf %d %d %d --- ", b[0], b[20], v.Flag)
+				}
 				s.Wait_msp(msp_SET_WP, b)
+				if *verbose {
+					fmt.Fprintf(os.Stderr, "Buf %d %d\n", b[0], b[20])
+				}
 			}
 		}
-		fmt.Fprintf(os.Stderr, "upload %d, save %v\n", i, eeprom)
+		fmt.Printf("upload %d, save %v\n", i, eeprom)
 
 		if eeprom {
 			z := make([]byte, 1)
@@ -562,15 +573,15 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 			t := time.Now()
 			s.Wait_msp(msp_WP_MISSION_SAVE, z)
 			et := time.Since(t)
-			fmt.Fprintf(os.Stderr, "Saved mission (%s)\n", et)
+			fmt.Printf("Saved mission (%s)\n", et)
 		}
 		v := s.Wait_msp(msp_WP_GETINFO, nil)
 		wp_max := v.data[1]
 		wp_valid := v.data[2]
 		wp_count := v.data[3]
-		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Printf("Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	} else {
-		fmt.Fprintf(os.Stderr, "Mission fails verification, upload cancelled\n")
+		fmt.Printf("Mission fails verification, upload cancelled\n")
 	}
 }
 
@@ -581,7 +592,7 @@ func (m *MSPSerial) get_multi_index() {
 	buf[lstr] = 0
 	v := m.Wait_msp(msp_COMMON_SETTING, buf)
 	if v.len > 0 {
-		fmt.Fprintf(os.Stderr, "Multi index %d\n", v.data[0])
+		fmt.Printf("Multi index %d\n", v.data[0])
 	}
 }
 
