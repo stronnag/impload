@@ -65,6 +65,8 @@ Run the executable for your platform in a terminal (Windows `cmd` or `powershell
       -s float
         	Default speed (m/s)
       -v	Shows version
+      -verbose
+    	    Verbose
       command:
     	Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
