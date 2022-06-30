@@ -100,6 +100,14 @@ The convert command converts the first file into an MW XML mission file with the
 
 The test command establishes communications with the flight controller and reports the FC name and build, as well as the contents of volatile mission memory.
 
+### clear
+
+Removes any extant mission from volatile memory.
+
+### erase
+
+Removes any extant mission from volatile memory and EEPROM.
+
 ### multi[=n]
 
 Gets (`multi`) or sets (`multi=n`) the current active multi-mission Id.
