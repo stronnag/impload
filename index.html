@@ -356,6 +356,8 @@ Options:
   -s float
         Default speed (m/s)
   -v    Shows version
+  -verbose
+        Verbose
   command:
     Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
@@ -375,6 +377,10 @@ EEPROM.</p>
 <p>The convert command converts the first file into an MW XML mission file with the second file name.</p>
 <h3 id="test">test<a class="headerlink" href="#test" title="Permanent link">#</a></h3>
 <p>The test command establishes communications with the flight controller and reports the FC name and build, as well as the contents of volatile mission memory.</p>
+<h3 id="clear">clear<a class="headerlink" href="#clear" title="Permanent link">#</a></h3>
+<p>Removes any extant mission from volatile memory.</p>
+<h3 id="erase">erase<a class="headerlink" href="#erase" title="Permanent link">#</a></h3>
+<p>Removes any extant mission from volatile memory and EEPROM.</p>
 <h3 id="multin">multi[=n]<a class="headerlink" href="#multin" title="Permanent link">#</a></h3>
 <p>Gets (<code>multi</code>) or sets (<code>multi=n</code>) the current active multi-mission Id.</p>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">#</a></h2>
