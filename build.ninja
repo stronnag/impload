@@ -8,3 +8,13 @@ rule gosum
      command = go mod tidy
 
 build go.sum: gosum
+
+rule copy
+    command = install $in $$HOME/.local/bin/
+
+build install: copy impload
+
+rule clean
+     command = rm -f impload
+
+build clean: clean
