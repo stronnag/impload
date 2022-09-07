@@ -182,3 +182,45 @@ func (mm *MultiMission) To_cli(fname string) {
 		}
 	}
 }
+
+func (mm *MultiMission) To_md(params ...string) {
+	w, err := openStdoutOrFile(params[0])
+	if err == nil {
+		defer w.Close()
+
+		mm.Comment = xml_comment(params)
+
+		fmt.Fprintln(w, "## Mission Details")
+
+		for j, m := range mm.Segment {
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "### Segment %d\n", j+1)
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "|      |              |")
+			fmt.Fprintln(w, "| ---- | ------------ |")
+			fmt.Fprintf(w, "| Generator | %s |\n", m.Metadata.Generator)
+			fmt.Fprintf(w, "| Save date | %s |\n", m.Metadata.Stamp)
+			if m.Metadata.Homey != 0 && m.Metadata.Homex != 0 {
+				fmt.Fprintf(w, "| Planned Home | %.7f %.7f |\n", m.Metadata.Homey, m.Metadata.Homex)
+			}
+			if m.Metadata.Cy != 0 && m.Metadata.Cx != 0 {
+				fmt.Fprintf(w, "| Centre on | %.7f %.7f |\n", m.Metadata.Cy, m.Metadata.Cx)
+			}
+
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "| WP# | Action | Lat | Lon | Alt | P1 | P2 | P3 | flag |")
+			fmt.Fprintln(w, "| ---- | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- |")
+
+			no := 1
+			for _, mi := range m.MissionItems {
+				fmt.Fprintf(w, "| %d | %s | %.7f | %.7f | %d | %d | %d | %d | %d |\n",
+					no, mi.Action, mi.Lat, mi.Lon, mi.Alt, mi.P1, mi.P2, mi.P3, mi.Flag)
+				no++
+			}
+		}
+		if len(mm.Comment) > 0 {
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, mm.Comment)
+		}
+	}
+}

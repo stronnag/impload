@@ -1,18 +1,18 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/csv"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
-	"os"
-	"archive/zip"
-	"encoding/json"
-	"encoding/xml"
 )
 
 type QGCrec struct {
@@ -71,14 +71,14 @@ type MissionItem struct {
 }
 
 type MissionMWP struct {
-	Zoom      int     `xml:"zoom,attr" json:"zoom"`
-	Cx        float64 `xml:"cx,attr" json:"cx"`
-	Cy        float64 `xml:"cy,attr" json:"cy"`
-	Homex     float64 `xml:"home-x,attr" json:"home-x"`
-	Homey     float64 `xml:"home-y,attr" json:"home-y"`
-	Stamp     string  `xml:"save-date,attr" json:"save-date"`
-	Generator string  `xml:"generator,attr" json:"generator"`
-	Details   MissionDetail  `xml:"details,omitempty" json:"details,omitempty"`
+	Zoom      int           `xml:"zoom,attr" json:"zoom"`
+	Cx        float64       `xml:"cx,attr" json:"cx"`
+	Cy        float64       `xml:"cy,attr" json:"cy"`
+	Homex     float64       `xml:"home-x,attr" json:"home-x"`
+	Homey     float64       `xml:"home-y,attr" json:"home-y"`
+	Stamp     string        `xml:"save-date,attr" json:"save-date"`
+	Generator string        `xml:"generator,attr" json:"generator"`
+	Details   MissionDetail `xml:"details,omitempty" json:"details,omitempty"`
 }
 
 type Version struct {
@@ -87,36 +87,35 @@ type Version struct {
 
 type MissionDetail struct {
 	Distance struct {
-		Units string  `xml:"units,attr,omitempty" json:"units,omitempty"`
-		Value int     `xml:"value,attr,omitempty" json:"value,omitempty"`
-	}  `xml:"distance,omitempty" json:"distance,omitempty"`
+		Units string `xml:"units,attr,omitempty" json:"units,omitempty"`
+		Value int    `xml:"value,attr,omitempty" json:"value,omitempty"`
+	} `xml:"distance,omitempty" json:"distance,omitempty"`
 }
 
 type MissionSegment struct {
-	Metadata MissionMWP    `xml:"mwp" json:"meta"`
+	Metadata     MissionMWP    `xml:"meta" json:"meta"`
 	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
 }
 
 type MultiMission struct {
-	XMLName xml.Name `xml:"mission"  json:"-"`
-	Version Version  `xml:"version" json:"-"`
-	Comment string   `xml:",comment" json:"-"`
-	Segment    []MissionSegment  `json:"missions"`
+	XMLName xml.Name         `xml:"mission"  json:"-"`
+	Version Version          `xml:"version" json:"-"`
+	Comment string           `xml:",comment" json:"-"`
+	Segment []MissionSegment `json:"missions"`
 }
 
 type Mission struct {
 	XMLName      xml.Name      `xml:"mission"  json:"-"`
 	Version      Version       `xml:"version" json:"-"`
 	Comment      string        `xml:",comment" json:"-"`
-	Metadata     []MissionMWP    `xml:"mwp" json:"meta"`
+	Metadata     []MissionMWP  `xml:"meta" json:"meta"`
 	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
 }
-
 
 // Custom encoder to avoid element tags around each segment
 
 func (ml *MissionSegment) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	if err := e.EncodeElement(ml.Metadata, xml.StartElement{Name: xml.Name{Local: "mwp"}}); err != nil {
+	if err := e.EncodeElement(ml.Metadata, xml.StartElement{Name: xml.Name{Local: "meta"}}); err != nil {
 		return err
 	}
 	for _, mi := range ml.MissionItems {
@@ -150,8 +149,8 @@ func find_kml_coords(dat []byte) *PlaceMark {
 	return nil
 }
 
-func NewMultiMission (mis []MissionItem) *MultiMission {
-	mm := 	&MultiMission{Version: Version{Value: GetVersion()}, Segment: []MissionSegment{{}}}
+func NewMultiMission(mis []MissionItem) *MultiMission {
+	mm := &MultiMission{Version: Version{Value: GetVersion()}, Segment: []MissionSegment{{}}}
 	if mis != nil {
 		segno := 0
 		no := 1
@@ -160,7 +159,7 @@ func NewMultiMission (mis []MissionItem) *MultiMission {
 			no++
 			mm.Segment[segno].MissionItems = append(mm.Segment[segno].MissionItems, mis[j])
 			if mis[j].Flag == 0xa5 {
-				if j != len(mis) -1 {
+				if j != len(mis)-1 {
 					mm.Segment = append(mm.Segment, MissionSegment{})
 					segno++
 					no = 1
@@ -168,7 +167,7 @@ func NewMultiMission (mis []MissionItem) *MultiMission {
 			}
 		}
 		if no > 1 {
-			mm.Segment[segno].MissionItems[no-2].Flag = 0xa5;
+			mm.Segment[segno].MissionItems[no-2].Flag = 0xa5
 		}
 	}
 	return mm
@@ -296,6 +295,8 @@ func (m *MissionSegment) Add_rtl(land bool) {
 
 func (m *MultiMission) Dump(outfmt string, params ...string) {
 	switch outfmt {
+	case "md":
+		m.To_md(params...)
 	case "cli":
 		m.To_cli(params[0])
 	case "json":
@@ -481,11 +482,11 @@ func read_qgc_text(dat []byte) []QGCrec {
 func fixup_qgc_mission(mis []MissionItem, have_jump bool) ([]MissionItem, bool) {
 	ok := true
 	if have_jump {
-		for i := range(mis) {
+		for i := range mis {
 			if mis[i].Action == "JUMP" {
 				jumptgt := mis[i].P1
 				ajump := int16(0)
-				for j := range(mis) {
+				for j := range mis {
 					p3abs := mis[j].P3 // -ve indicate amsl
 					if p3abs < 0 {
 						p3abs *= -1
@@ -509,7 +510,7 @@ func fixup_qgc_mission(mis []MissionItem, have_jump bool) ([]MissionItem, bool) 
 		}
 	}
 	if ok {
-		for i := range(mis) {
+		for i := range mis {
 			if mis[i].P3 < 0 {
 				mis[i].P3 = 1
 			} else {

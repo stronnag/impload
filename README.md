@@ -30,7 +30,7 @@ Options:
   -d string
     	Serial Device
   -fmt string
-    	Output format (xml, json, cli, xml-ugly) (default "xml")
+    	Output format (xml, json, md, cli, xml-ugly) (default "xml")
   -force-land
     	Adds RTH / Land for 'external' formats
   -force-rth
