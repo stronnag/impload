@@ -12,7 +12,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-7.3.6">
+      <meta name="generator" content="mkdocs-1.4.0, mkdocs-material-7.3.6">
     
     
       
@@ -334,8 +334,8 @@
 
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h1>
 <p>From source: <code>go get github.com/stronnag/impload</code>, binaries endup in <code>go/bin</code>, source in <code>go/src/github.com/stronnag/impload</code>. Requires <code>go</code> and <code>git</code>.</p>
-<p>Binaries in the Release area (linux ia32/x86_64/arm7, Win32, MacOS, FreeBSD) if you don’t want it build it locally. The <a href="https://github.com/stronnag/impload/releases">release area</a> provides
-standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, FreeBSD and Windows .</p>
+<p>Binaries in the Release area (linux ia32/x86_64/arm7, MacOS, FreeBSD) if you don’t want it build it locally. The <a href="https://github.com/stronnag/impload/releases">release area</a> provides
+standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, and FreeBSD.</p>
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
 <p>Run the executable for your platform in a terminal (Windows <code>cmd</code> or <code>powershell</code>). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. <code>-d COM7</code> on Windows, <code>-d /dev/tty.usbmodem14211</code> on MacO (where 14221 is possibly a random number).</p>
 <pre><code>$ impload -help
