@@ -39,8 +39,8 @@ Installation
 
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
 
-Binaries in the Release area (linux ia32/x86\_64/arm7, Win32, MacOS, FreeBSD) if you don’t want it build it locally. The [release area](https://github.com/stronnag/impload/releases) provides
-standalone binaries for ARM Linux (arm7), Linux on ia32 and x86\_64, MacOS, FreeBSD and Windows .
+Binaries in the Release area (linux ia32/x86\_64/arm7, MacOS, FreeBSD) if you don’t want it build it locally. The [release area](https://github.com/stronnag/impload/releases) provides
+standalone binaries for ARM Linux (arm7), Linux on ia32 and x86\_64, MacOS, and FreeBSD.
 
 Usage
 =====
