@@ -3,7 +3,7 @@ impload - iNav Mission Plan uploader
 
 # Introduction
 
-[impload](https://github.com/stronnag/impload) is a cross-platform command line application to upload missions in a number of formats to an iNav flight controller. "Alien" formats may also be converted to MW-XML. Supported formats include:
+[impload](https://github.com/stronnag/impload) is a cross-platform command line application to upload missions in a number of formats to an INAV flight controller. "Alien" formats may also be converted to MW-XML. Supported formats include:
 
 * [MW XML](https://github.com/iNavFlight/inav/tree/master/docs/development/wp_mission_schema) mission files (as used by [mwp](https://github.com/stronnag/mwptools), [inav configurator](https://github.com/iNavFlight/inav-configurator), ezgui, mission planner for inav)
 * apmplanner / qgroundcontrol mission files (qgc plan mission and survey at least (QPC or JSON).
@@ -70,8 +70,8 @@ udp://:14014/esp-air:14014
 
 ## Use Cases
 
-* Plan missions in apmplanner2 (QGC WPL 110 text files), upload (& save) to iNav
-* Plan missions in qgroundcontrol (JSON plan files), upload (& save) to iNav
+* Plan missions in apmplanner2 (QGC WPL 110 text files), upload (& save) to INAV
+* Plan missions in qgroundcontrol (JSON plan files), upload (& save) to INAV
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Convert "alien" formats to MW-XML.
@@ -87,7 +87,7 @@ From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, s
 * upload : upload mission to FC volatile memory
 * store : upload mission to FC volatile memory and stores in EEPROM
 * download : downloads mission from FC volatile memory
-* restore : restores mission from EEROM to FC volatile memory and downloads the mission
+* restore : restores mission from EEPROM to FC volatile memory and downloads the mission
 * convert : converts alien formats to MW-XML (default), or the format defined by the `-fmt` option.
 * test : tests communications with FC
 * clear : clear mission in volatile RAM (specifically, uploads a mission with just a single RTH WP, which is always safe).
