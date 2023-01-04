@@ -38,8 +38,10 @@ Options:
   -s float
     	Default speed (m/s)
   -v	Shows version
+  -verbose
+    	Verbose
   command:
-	Action required (upload|download|store|restore|convert|test|clear|erase)
+	Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 ```
 
 ## Device Name
