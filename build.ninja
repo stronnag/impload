@@ -1,7 +1,7 @@
 rule go
     command = CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -extldflags -static" -o $out
 
-build impload: go btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go mission-read.go  outfmt.go go.sum
+build impload: go btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go mission-read.go  outfmt.go enumerate_port.go go.sum
 default impload
 
 rule gosum

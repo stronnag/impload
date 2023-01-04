@@ -143,14 +143,11 @@ func verify_in_out_files(files []string) (string, string) {
 func check_device() DevDescription {
 	devdesc := parse_device(*device)
 	if devdesc.klass == DevClass_NONE {
-		for _, v := range []string{"/dev/ttyACM0", "/dev/ttyUSB0"} {
-			if _, err := os.Stat(v); err == nil {
-				devdesc.klass = DevClass_SERIAL
-				devdesc.name = v
-				*device = v
-				devdesc.param = *baud
-				break
-			}
+		if v, err := enumerate_ports(); err == nil {
+			devdesc.klass = DevClass_SERIAL
+			devdesc.name = v
+			*device = v
+			devdesc.param = *baud
 		}
 	}
 
