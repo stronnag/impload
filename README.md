@@ -80,7 +80,7 @@ udp://:14014/esp-air:14014
 
 ## Install
 
-Binaries in the Release area (linux ia32/x86_64/arm7, FreeBSD, MacOS) if you don't want it build it locally.
+Binaries in the Release area (FreeBSD, Linux, MacOS, Win32) if you don't want it build it locally.
 
 From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
 
