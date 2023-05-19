@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
-	"os"
+	//	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -45,10 +45,9 @@ func evince_zoom(bbox BBox) int {
 }
 
 func (mm *MultiMission) Update_mission_meta() {
-	var moving = os.Getenv("MWP_POS_OFFSET")
 	var offlat, offlon float64
-	if moving != "" {
-		offsets := strings.Split(moving, ",")
+	if *rebase != "" {
+		offsets := strings.Split(*rebase, ",")
 		offlat, _ = strconv.ParseFloat(offsets[0], 64)
 		offlon, _ = strconv.ParseFloat(offsets[1], 64)
 	}
@@ -58,6 +57,22 @@ func (mm *MultiMission) Update_mission_meta() {
 		if *outfmt != "xml-ugly" {
 			ino = 1
 		}
+
+		if *rebase != "" {
+			if len(mm.Segment[i].MissionItems) > 0 {
+				if mm.Segment[i].MissionItems[0].Lon != 0 && mm.Segment[i].MissionItems[0].Lat != 0 {
+					offlat -= mm.Segment[i].MissionItems[0].Lat
+					offlon -= mm.Segment[i].MissionItems[0].Lon
+				}
+			}
+			if mm.Segment[i].Metadata.Homey != 0 {
+				mm.Segment[i].Metadata.Homey += offlat
+			}
+			if mm.Segment[i].Metadata.Homex != 0 {
+				mm.Segment[i].Metadata.Homex += offlon
+			}
+		}
+
 		var bbox = BBox{-999, 999, -999, 999}
 		var cx, cy, ni float64
 		for j := range mm.Segment[i].MissionItems {
@@ -79,7 +94,7 @@ func (mm *MultiMission) Update_mission_meta() {
 					}
 				}
 
-				if moving != "" {
+				if *rebase != "" {
 					mm.Segment[i].MissionItems[j].Lat += offlat
 					mm.Segment[i].MissionItems[j].Lon += offlon
 				}
