@@ -35,6 +35,8 @@ Options:
     	Adds RTH / Land for 'external' formats
   -force-rth
     	Adds RTH for 'external' formats
+  -rebase string
+    	rebase 1st WP to location (as lat,lon)
   -s float
     	Default speed (m/s)
   -v	Shows version
@@ -155,6 +157,8 @@ Waypoints: 12 of 60, valid 1
 
 # Conversion
 $ impload convert g-earth.kmz example.mission
+# Convert and relocate
+impload -rebase  35.761000,140.378945 convert WP_test.mission  /tmp/wp-test-jp.mission
 ```
 
 ## Postscript
