@@ -12,6 +12,20 @@ import (
 	"time"
 )
 
+func ll2metres(lat, lon float64) (float64, float64) {
+	x := lon * 20037508.34 / 180.0
+	y := math.Log(math.Tan((90.0+lat)*math.Pi/360.0)) / (math.Pi / 180.0)
+	y = y * 20037508.34 / 180.0
+	return x, y
+}
+
+func metres2ll(x, y float64) (float64, float64) {
+	lon := x * 180.0 / 20037508.34
+	lat := y * 180.0 / 20037508.34
+	lat = (math.Atan(math.Pow(math.E, (lat*(math.Pi/180.0))))*360.0)/math.Pi - 90.0
+	return lat, lon
+}
+
 type BBox struct {
 	lamax, lamin, lomax, lomin float64
 }
@@ -44,12 +58,27 @@ func evince_zoom(bbox BBox) int {
 	return z
 }
 
+func movell(lat, lon, dx, dy float64) (float64, float64) {
+	if lat != 0.0 && lon != 0.0 {
+		lx, ly := ll2metres(lat, lon)
+		lat, lon = metres2ll(lx+dx, ly+dy)
+	}
+	return lat, lon
+}
+
 func (mm *MultiMission) Update_mission_meta() {
-	var offlat, offlon float64
+	dx := 0.0
+	dy := 0.0
 	if *rebase != "" {
 		offsets := strings.Split(*rebase, ",")
-		offlat, _ = strconv.ParseFloat(offsets[0], 64)
-		offlon, _ = strconv.ParseFloat(offsets[1], 64)
+		blat, _ := strconv.ParseFloat(offsets[0], 64)
+		blon, _ := strconv.ParseFloat(offsets[1], 64)
+		nx, ny := ll2metres(blat, blon)
+		lat := mm.Segment[0].MissionItems[0].Lat
+		lon := mm.Segment[0].MissionItems[0].Lon
+		lx, ly := ll2metres(lat, lon)
+		dx = nx - lx
+		dy = ny - ly
 	}
 
 	ino := 1
@@ -59,18 +88,7 @@ func (mm *MultiMission) Update_mission_meta() {
 		}
 
 		if *rebase != "" {
-			if len(mm.Segment[i].MissionItems) > 0 {
-				if mm.Segment[i].MissionItems[0].Lon != 0 && mm.Segment[i].MissionItems[0].Lat != 0 {
-					offlat -= mm.Segment[i].MissionItems[0].Lat
-					offlon -= mm.Segment[i].MissionItems[0].Lon
-				}
-			}
-			if mm.Segment[i].Metadata.Homey != 0 {
-				mm.Segment[i].Metadata.Homey += offlat
-			}
-			if mm.Segment[i].Metadata.Homex != 0 {
-				mm.Segment[i].Metadata.Homex += offlon
-			}
+			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = movell(mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex, dx, dy)
 		}
 
 		var bbox = BBox{-999, 999, -999, 999}
@@ -95,8 +113,7 @@ func (mm *MultiMission) Update_mission_meta() {
 				}
 
 				if *rebase != "" {
-					mm.Segment[i].MissionItems[j].Lat += offlat
-					mm.Segment[i].MissionItems[j].Lon += offlon
+					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = movell(mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon, dx, dy)
 				}
 				cy += mm.Segment[i].MissionItems[j].Lat
 				cx += mm.Segment[i].MissionItems[j].Lon
