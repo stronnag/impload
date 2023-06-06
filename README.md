@@ -84,8 +84,6 @@ udp://:14014/esp-air:14014
 
 Binaries in the Release area (FreeBSD, Linux, MacOS, Win32) if you don't want it build it locally.
 
-From source: `go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
-
 ## Command summary
 
 * upload : upload mission to FC volatile memory
@@ -159,6 +157,35 @@ Waypoints: 12 of 60, valid 1
 $ impload convert g-earth.kmz example.mission
 # Convert and relocate
 impload -rebase  35.761000,140.378945 convert WP_test.mission  /tmp/wp-test-jp.mission
+```
+
+## Build Instructions
+
+### Go infrastructure, unmodified source
+
+`go get github.com/stronnag/impload`, binaries endup in `go/bin`, source in `go/src/github.com/stronnag/impload`. Requires `go` and `git`.
+
+### Local compilation (e.g for local modification)
+
+`git clone https://github.com/stronnag/impload`
+
+Files sources where ever you wish.
+
+* Simplest, everywhere: `go build`
+* Optimised:
+    - Linux, FreeBSD, MacOS : `ninja` (install `ninja`) or `CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -extldflags -static" -o impload` (CGO_ENABLED=0 forces no runtime dependencies).
+	- Windows:  `go build -ldlfags "-s -w" -o impload.exe` (probably).
+
+Note that you can cross-compile for any OS / architecture supported by Go using the `GOOS` and `GOARCH` environment variables, e.g for Win32 on Linux riscvs64:
+
+```
+$ uname -a
+Linux jagular 5.15.2-cwt13 #2 SMP PREEMPT Thu Jun 1 14:42:43 +07 2023 riscv64 GNU/Linux
+$ GOOS=windows GOARCH=386 ninja
+[1/1] CGO_ENABLED=0 go build -trimpath..."-s -w -extldflags -static" -o impload
+$ mv impload impload.exe
+$ file impload.exe
+impload.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows, 6 sections
 ```
 
 ## Postscript
