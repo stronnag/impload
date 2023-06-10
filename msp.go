@@ -504,16 +504,17 @@ func (m *MSPSerial) download(eeprom bool) *MultiMission {
 
 	v := m.Wait_msp(msp_WP_GETINFO, nil)
 	wp_count := v.data[3]
-
-	z := make([]byte, 1)
 	var mis = []MissionItem{}
-	for z[0] = 1; ; z[0]++ {
-		v := m.Wait_msp(msp_WP, z)
-		if v.len > 0 {
-			_, mi := deserialise_wp(v.data)
-			mis = append(mis, mi)
-			if z[0] == wp_count {
-				break
+	if wp_count > 0 {
+		z := make([]byte, 1)
+		for z[0] = 1; ; z[0]++ {
+			v := m.Wait_msp(msp_WP, z)
+			if v.len > 0 {
+				_, mi := deserialise_wp(v.data)
+				mis = append(mis, mi)
+				if z[0] == wp_count {
+					break
+				}
 			}
 		}
 	}
