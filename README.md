@@ -79,6 +79,7 @@ udp://:14014/esp-air:14014
 * Plan missions an any GPX creating GIS tool
 * Plan mission in Google Earth, save as KML path, upload to the FC
 * Convert "alien" formats to MW-XML.
+* Move a mission to a new location
 
 ## Install
 
@@ -171,10 +172,8 @@ impload -rebase  35.761000,140.378945 convert WP_test.mission  /tmp/wp-test-jp.m
 
 Files sources where ever you wish.
 
-* Simplest, everywhere: `go build`
-* Optimised:
-    - Linux, FreeBSD, MacOS : `ninja` (install `ninja`) or `CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -extldflags -static" -o impload` (CGO_ENABLED=0 forces no runtime dependencies).
-	- Windows:  `go build -ldlfags "-s -w" -o impload.exe` (probably).
+* Simplest: `make` (or `make install`)
+* Windows (native)  may need something like :  `go build -ldlfags "-s -w" -o impload.exe` (probably). Easiest to cross-compile from a POSIX OS.
 
 Note that you can cross-compile for any OS / architecture supported by Go using the `GOOS` and `GOARCH` environment variables, e.g for Win32 on Linux riscvs64:
 
