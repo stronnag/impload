@@ -173,16 +173,16 @@ impload -rebase  35.761000,140.378945 convert WP_test.mission  /tmp/wp-test-jp.m
 Files sources where ever you wish.
 
 * Simplest: `make` (or `make install`)
-* Windows (native)  may need something like :  `go build -ldlfags "-s -w" -o impload.exe` (probably). Easiest to cross-compile from a POSIX OS.
+* Windows (native):  `make nocgo` (probably). You can also use the `nocgo` target on POSIX to generate a dynamically linked executable (vice the default static executable).
 
 Note that you can cross-compile for any OS / architecture supported by Go using the `GOOS` and `GOARCH` environment variables, e.g for Win32 on Linux riscvs64:
 
 ```
 $ uname -a
 Linux jagular 5.15.2-cwt13 #2 SMP PREEMPT Thu Jun 1 14:42:43 +07 2023 riscv64 GNU/Linux
-$ GOOS=windows GOARCH=386 ninja
-[1/1] CGO_ENABLED=0 go build -trimpath..."-s -w -extldflags -static" -o impload
-$ mv impload impload.exe
+GOOS=windows GOARCH=386 make clean nocgo
+rm -f impload
+CGO_ENABLED=0  go build -trimpath -ldflags "-s -w -X \"main.GitCommit=0fa31fb / 2023-06-11\" -X \"main.GitTag=v5.161.652\""
 $ file impload.exe
 impload.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows, 6 sections
 ```

@@ -12,6 +12,9 @@ all: $(APP)
 $(APP):  $(APP).go $(GOFILES) go.sum
 	CGO_ENABLED=0  go build -trimpath -ldflags $(LDFLAGS)
 
+nocgo: $(APP).go $(GOFILES) go.sum
+	go build -trimpath -ldflags $(LDFLAGS)
+
 go.sum: go.mod
 	go mod tidy
 
@@ -20,4 +23,4 @@ install: $(APP)
 	install $(APP) $(prefix)/bin/
 
 clean:
-	rm -f $(APP)
+	rm -f $(APP) $(APP).exe
