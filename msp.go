@@ -87,6 +87,7 @@ type MSPSerial struct {
 var (
 	Wp_count byte
 	use_v2   bool
+	dumphex  bool
 )
 
 func crc8_dvb_s2(crc byte, a byte) byte {
@@ -121,8 +122,10 @@ func encode_msp2(cmd uint16, payload []byte) []byte {
 		crc = crc8_dvb_s2(crc, b)
 	}
 	buf[8+paylen] = crc
-	fmt.Fprintf(os.Stderr, "MSPV2 %d\n", cmd)
-	hexdump(buf)
+	if dumphex {
+		fmt.Fprintf(os.Stderr, "MSPV2 %d\n", cmd)
+		hexdump(buf)
+	}
 	return buf
 }
 
@@ -366,6 +369,9 @@ func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
 
 func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
+
+	dumphex = os.Getenv("IMPLOAD_DUMPHEX") != ""
+
 	m := NewMSPSerial(dd)
 
 	m.c0 = make(chan MsgData)
@@ -493,8 +499,10 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	binary.LittleEndian.PutUint16(buf[16:18], uint16(mi.P2))
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(mi.P3))
 	buf[20] = mi.Flag
-	fmt.Fprintf(os.Stderr, "WP %d\n", buf[0])
-	hexdump(buf)
+	if dumphex {
+		fmt.Fprintf(os.Stderr, "WP %d\n", mi.No)
+		hexdump(buf)
+	}
 	return len(buf), buf
 }
 
