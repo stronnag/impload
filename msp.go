@@ -121,6 +121,8 @@ func encode_msp2(cmd uint16, payload []byte) []byte {
 		crc = crc8_dvb_s2(crc, b)
 	}
 	buf[8+paylen] = crc
+	fmt.Fprintf(os.Stderr, "MSPV2 %d\n", cmd)
+	hexdump(buf)
 	return buf
 }
 
@@ -491,7 +493,16 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	binary.LittleEndian.PutUint16(buf[16:18], uint16(mi.P2))
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(mi.P3))
 	buf[20] = mi.Flag
+	fmt.Fprintf(os.Stderr, "WP %d\n", buf[0])
+	hexdump(buf)
 	return len(buf), buf
+}
+
+func hexdump(buf []byte) {
+	for _, b := range buf {
+		fmt.Fprintf(os.Stderr, "%02x ", b)
+	}
+	fmt.Fprintln(os.Stderr)
 }
 
 func (m *MSPSerial) download(eeprom bool) *MultiMission {
