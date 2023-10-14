@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
-	//	"os"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -74,8 +74,13 @@ func (mm *MultiMission) Update_mission_meta() {
 		if bidx > 0 && bidx <= len(mm.Segment[bseg].MissionItems) {
 			bidx -= 1
 		}
-		blat0 = mm.Segment[bseg].MissionItems[bidx].Lat
-		blon0 = mm.Segment[bseg].MissionItems[bidx].Lon
+		if mm.Segment[bseg].MissionItems[bidx].is_GeoPoint() {
+			blat0 = mm.Segment[bseg].MissionItems[bidx].Lat
+			blon0 = mm.Segment[bseg].MissionItems[bidx].Lon
+		} else {
+			fmt.Fprintf(os.Stderr, "Rebase WP is not geographic seg%d/wp%d\n", bseg+1, bidx+1)
+			os.Exit(127)
+		}
 	}
 	ino := 1
 	for i := range mm.Segment {
