@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
-	"os"
+	//	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -51,14 +51,17 @@ func evince_zoom(bbox BBox) int {
 func (mm *MultiMission) Update_mission_meta() {
 	brg := 0.0
 	rng := 0.0
+	var blat float64
+	var blon float64
+	var lat0 float64
+	var lon0 float64
+
 	if *rebase != "" {
 		offsets := strings.Split(*rebase, ",")
-		blat, _ := strconv.ParseFloat(offsets[0], 64)
-		blon, _ := strconv.ParseFloat(offsets[1], 64)
-		lat := mm.Segment[0].MissionItems[0].Lat
-		lon := mm.Segment[0].MissionItems[0].Lon
-		brg, rng = geo.Csedist(lat, lon, blat, blon)
-		fmt.Fprintf(os.Stderr, "rebase %f %f => %f %f, %.1f %.1f\n", lat, lon, blat, blon, brg, rng)
+		blat, _ = strconv.ParseFloat(offsets[0], 64)
+		blon, _ = strconv.ParseFloat(offsets[1], 64)
+		lat0 = mm.Segment[0].MissionItems[0].Lat
+		lon0 = mm.Segment[0].MissionItems[0].Lon
 	}
 
 	ino := 1
@@ -68,7 +71,8 @@ func (mm *MultiMission) Update_mission_meta() {
 		}
 
 		if *rebase != "" {
-			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = geo.Posit(mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex, brg, rng)
+			brg, rng = geo.Csedist(lat0, lon0, mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex)
+			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = geo.Posit(blat, blon, brg, rng)
 		}
 
 		var bbox = BBox{-999, 999, -999, 999}
@@ -93,7 +97,8 @@ func (mm *MultiMission) Update_mission_meta() {
 				}
 
 				if *rebase != "" {
-					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = geo.Posit(mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon, brg, rng)
+					brg, rng = geo.Csedist(lat0, lon0, mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon)
+					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = geo.Posit(blat, blon, brg, rng)
 				}
 				cy += mm.Segment[i].MissionItems[j].Lat
 				cx += mm.Segment[i].MissionItems[j].Lon
