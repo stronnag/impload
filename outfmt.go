@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"math"
-	"os"
+	//	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -51,16 +51,32 @@ func evince_zoom(bbox BBox) int {
 func (mm *MultiMission) Update_mission_meta() {
 	brg := 0.0
 	rng := 0.0
+	var blat float64
+	var blon float64
+	var blat0 float64
+	var blon0 float64
+	bidx := 0
+	bseg := 0
+
 	if *rebase != "" {
 		offsets := strings.Split(*rebase, ",")
-		blat, _ := strconv.ParseFloat(offsets[0], 64)
-		blon, _ := strconv.ParseFloat(offsets[1], 64)
-		lat := mm.Segment[0].MissionItems[0].Lat
-		lon := mm.Segment[0].MissionItems[0].Lon
-		brg, rng = geo.Csedist(lat, lon, blat, blon)
-		fmt.Fprintf(os.Stderr, "rebase %f %f => %f %f, %.1f %.1f\n", lat, lon, blat, blon, brg, rng)
+		blat, _ = strconv.ParseFloat(offsets[0], 64)
+		blon, _ = strconv.ParseFloat(offsets[1], 64)
+		if len(offsets) >= 3 {
+			bidx, _ = strconv.Atoi(offsets[2])
+			if bidx > 0 {
+				bidx -= 1
+			}
+		}
+		if len(offsets) == 4 {
+			bseg, _ = strconv.Atoi(offsets[3])
+			if bseg > 0 {
+				bseg -= 1
+			}
+		}
+		blat0 = mm.Segment[bseg].MissionItems[bidx].Lat
+		blon0 = mm.Segment[bseg].MissionItems[bidx].Lon
 	}
-
 	ino := 1
 	for i := range mm.Segment {
 		if *outfmt != "xml-ugly" {
@@ -68,7 +84,8 @@ func (mm *MultiMission) Update_mission_meta() {
 		}
 
 		if *rebase != "" {
-			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = geo.Posit(mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex, brg, rng)
+			brg, rng = geo.Csedist(blat0, blon0, mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex)
+			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = geo.Posit(blat, blon, brg, rng)
 		}
 
 		var bbox = BBox{-999, 999, -999, 999}
@@ -93,7 +110,8 @@ func (mm *MultiMission) Update_mission_meta() {
 				}
 
 				if *rebase != "" {
-					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = geo.Posit(mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon, brg, rng)
+					brg, rng = geo.Csedist(blat0, blon0, mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon)
+					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = geo.Posit(blat, blon, brg, rng)
 				}
 				cy += mm.Segment[i].MissionItems[j].Lat
 				cx += mm.Segment[i].MissionItems[j].Lon
