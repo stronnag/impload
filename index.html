@@ -7,12 +7,16 @@
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
       
-      
         <meta name="author" content="Jonathan Hudson">
       
       
+      
+      
+        <link rel="next" href="QGC-WP-110-supported-WP-types/">
+      
+      
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.0, mkdocs-material-7.3.6">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
     
     
       
@@ -20,36 +24,37 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.a57b2b03.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.d451bc0e.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.3f5d1f46.min.css">
-        
-          
-          
-          <meta name="theme-color" content="#757575">
-        
+        <link rel="stylesheet" href="assets/stylesheets/palette.a5377069.min.css">
       
-    
+      
+
+
     
     
       
+    
+    
+      
+        
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
-    
     
     
       <link rel="stylesheet" href="assets/extra.css">
     
       <link rel="stylesheet" href="assets/pdf.css">
     
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
-
+    
     
     
   </head>
@@ -63,7 +68,6 @@
     <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="grey" data-md-color-accent="dark-orange">
   
     
-    <script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -80,18 +84,22 @@
       
     </div>
     
+    
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="." title="impload" class="md-header__button md-logo" aria-label="impload" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -110,25 +118,30 @@
       </div>
     </div>
     
+      
+    
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -139,7 +152,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -169,12 +182,13 @@
                     
 
 
+
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="." title="impload" class="md-nav__button md-logo" aria-label="impload" data-md-component="logo">
       
   
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
 
     </a>
     impload
@@ -184,36 +198,44 @@
     
       
       
-      
-
   
   
     
   
   
+    
+    
+    
+    
     
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" checked>
-      
-      
-      
-      
-        <label class="md-nav__link" for="__nav_1">
-          Home
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" aria-label="Home" data-md-level="1">
-        <label class="md-nav__title" for="__nav_1">
-          <span class="md-nav__icon md-icon"></span>
-          Home
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
           
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Home
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
+                
   
   
     
@@ -221,37 +243,50 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
         
       
       
       <a href="." class="md-nav__link md-nav__link--active">
-        Index
+        
+  
+  <span class="md-ellipsis">
+    Index
+  </span>
+  
+
       </a>
       
     </li>
   
 
-            
-          
+              
             
               
+                
   
   
   
     <li class="md-nav__item">
       <a href="QGC-WP-110-supported-WP-types/" class="md-nav__link">
-        Conversion between QGC waypoints and inav
+        
+  
+  <span class="md-ellipsis">
+    Conversion between QGC waypoints and inav
+  </span>
+  
+
       </a>
     </li>
   
 
+              
             
-          
-        </ul>
-      </nav>
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -269,7 +304,6 @@
                   <div class="md-sidebar__inner">
                     
 
-
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -283,12 +317,14 @@
               </div>
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-                
-                <p><a href="https://github.com/stronnag/impload">impload</a>, aka <strong>inav Mission Plan Loader</strong>, is a cross-platform, command line tool to upload missions in  a number of file formats to inav. It can also download missions and convert between file formats.</p>
+                  
+
+
+<p><a href="https://github.com/stronnag/impload">impload</a>, aka <strong>inav Mission Plan Loader</strong>, is a cross-platform, command line tool to upload missions in  a number of file formats to inav. It can also download missions and convert between file formats.</p>
 <h1 id="mission-file-formats">Mission File formats<a class="headerlink" href="#mission-file-formats" title="Permanent link">#</a></h1>
 <p><a href="https://github.com/stronnag/impload">impload</a> supports the following file formats:</p>
 <ul>
@@ -338,30 +374,32 @@
 standalone binaries for ARM Linux (arm7), Linux on ia32 and x86_64, MacOS, and FreeBSD.</p>
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h1>
 <p>Run the executable for your platform in a terminal (Windows <code>cmd</code> or <code>powershell</code>). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. <code>-d COM7</code> on Windows, <code>-d /dev/tty.usbmodem14211</code> on MacO (where 14221 is possibly a random number).</p>
-<pre><code>$ impload -help
+<pre><code>$ impload --help
 Usage of impload [options] command [files ...]
 Options:
-  -a int
-        Default altitude (m) (default 20)
-  -b int
-        Baud rate (default 115200)
-  -d string
-        Serial Device
-  -fmt string
-        Output format (xml, json, cli, xml-ugly) (default "xml")
-  -force-land
-        Adds RTH / Land for 'external' formats
-  -force-rth
-        Adds RTH for 'external' formats
-  -s float
-        Default speed (m/s)
-  -v    Shows version
-  -verbose
-        Verbose
-  command:
-    Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
+ -a int
+    Default altitude (m) (default 20)
+ -b int
+    Baud rate (default 115200)
+ -d string
+    Serial Device
+ -fmt string
+    Output format (xml, json, md, cli, xml-ugly) (default "xml")
+ -force-land
+    Adds RTH / Land for 'external' formats
+ -force-rth
+    Adds RTH for 'external' formats
+ -rebase string
+    rebase 1st WP to location (as lat,lon[,wpno,segno)
+ -s float
+    Default speed (m/s)
+ -v Shows version
+ -verbose
+    Verbose
+ command:
+   Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
-impload v3.320.671, commit: c4c057e / 2021-11-16
+impload v5.162.398-4-ge63df6c, commit: e63df6c / 2023-10-14
 </code></pre>
 <h2 id="commands">Commands<a class="headerlink" href="#commands" title="Permanent link">#</a></h2>
 <h3 id="upload">upload<a class="headerlink" href="#upload" title="Permanent link">#</a></h3>
@@ -406,6 +444,7 @@ necessary to specify the device name / node.</p>
 <p><code>-force-land</code> : For GPX only, adds RTH with land after the final waypoint.</p>
 </li>
 </ul>
+<p>The <code>-rebase</code> option takes between 2 and 4 values, the first two are the latitude and longitude of the new base location. Without anything else, all new locations are based off WP1 in mission segment 1. The user can specify the WP number, and the multi-mission segment to be used in the third and forth parameters, for example <code>-rebase=35.762324,140.377314,2</code> would position WP2 of the relocated mission at the given location, with all other WPs relocated <em>pro-rata</em>.</p>
 <h3 id="device-names">Device Names<a class="headerlink" href="#device-names" title="Permanent link">#</a></h3>
 <p>impload supports a subset of the mwp device naming scheme:</p>
 <ul>
@@ -587,58 +626,37 @@ video</a>.</p>
 </ul>
 <h1 id="postscript">Postscript<a class="headerlink" href="#postscript" title="Permanent link">#</a></h1>
 <p>The author knows how to spell "implode".</p>
-                
-              
-              
-                
 
 
-              
-            </article>
-          </div>
+
+
+
+                
+              </article>
+            </div>
+          
+          
         </div>
         
       </main>
       
-        
-<footer class="md-footer">
-  
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
-      
-      
-        
-        <a href="QGC-WP-110-supported-WP-types/" class="md-footer__link md-footer__link--next" aria-label="Next: Conversion between QGC waypoints and inav" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Conversion between QGC waypoints and inav
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
+        <footer class="md-footer">
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-          <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2021 <a href="https://github.com/stronnag/impload">Jonathan Hudson</a>
-          </div>
-        
-        
-          Made with
-          <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-            Material for MkDocs
-          </a>
-        
-        
-      </div>
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2021 <a href="https://github.com/stronnag/impload">Jonathan Hudson</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
       
     </div>
   </div>
@@ -648,10 +666,11 @@ video</a>.</p>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.fcfe8b6d.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": null}</script>
+    
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.b1047164.min.js"></script>
+      <script src="assets/javascripts/bundle.726fbb30.min.js"></script>
       
     
   </body>
