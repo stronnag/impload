@@ -36,7 +36,7 @@ Options:
   -force-rth
     	Adds RTH for 'external' formats
   -rebase string
-    	rebase 1st WP to location (as lat,lon)
+    	rebase 1st WP to location (as lat,lon[,wpidx,segidx])
   -s float
     	Default speed (m/s)
   -v	Shows version

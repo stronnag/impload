@@ -53,17 +53,30 @@ func (mm *MultiMission) Update_mission_meta() {
 	rng := 0.0
 	var blat float64
 	var blon float64
-	var lat0 float64
-	var lon0 float64
+	var blat0 float64
+	var blon0 float64
+	bidx := 0
+	bseg := 0
 
 	if *rebase != "" {
 		offsets := strings.Split(*rebase, ",")
 		blat, _ = strconv.ParseFloat(offsets[0], 64)
 		blon, _ = strconv.ParseFloat(offsets[1], 64)
-		lat0 = mm.Segment[0].MissionItems[0].Lat
-		lon0 = mm.Segment[0].MissionItems[0].Lon
+		if len(offsets) >= 3 {
+			bidx, _ = strconv.Atoi(offsets[2])
+			if bidx > 0 {
+				bidx -= 1
+			}
+		}
+		if len(offsets) == 4 {
+			bseg, _ = strconv.Atoi(offsets[3])
+			if bseg > 0 {
+				bseg -= 1
+			}
+		}
+		blat0 = mm.Segment[bseg].MissionItems[bidx].Lat
+		blon0 = mm.Segment[bseg].MissionItems[bidx].Lon
 	}
-
 	ino := 1
 	for i := range mm.Segment {
 		if *outfmt != "xml-ugly" {
@@ -71,7 +84,7 @@ func (mm *MultiMission) Update_mission_meta() {
 		}
 
 		if *rebase != "" {
-			brg, rng = geo.Csedist(lat0, lon0, mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex)
+			brg, rng = geo.Csedist(blat0, blon0, mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex)
 			mm.Segment[i].Metadata.Homey, mm.Segment[i].Metadata.Homex = geo.Posit(blat, blon, brg, rng)
 		}
 
@@ -97,7 +110,7 @@ func (mm *MultiMission) Update_mission_meta() {
 				}
 
 				if *rebase != "" {
-					brg, rng = geo.Csedist(lat0, lon0, mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon)
+					brg, rng = geo.Csedist(blat0, blon0, mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon)
 					mm.Segment[i].MissionItems[j].Lat, mm.Segment[i].MissionItems[j].Lon = geo.Posit(blat, blon, brg, rng)
 				}
 				cy += mm.Segment[i].MissionItems[j].Lat
