@@ -64,15 +64,15 @@ func (mm *MultiMission) Update_mission_meta() {
 		blon, _ = strconv.ParseFloat(offsets[1], 64)
 		if len(offsets) >= 3 {
 			bidx, _ = strconv.Atoi(offsets[2])
-			if bidx > 0 {
-				bidx -= 1
-			}
 		}
 		if len(offsets) == 4 {
 			bseg, _ = strconv.Atoi(offsets[3])
-			if bseg > 0 {
-				bseg -= 1
-			}
+		}
+		if bseg > 0 && bseg <= len(mm.Segment) {
+			bseg -= 1
+		}
+		if bidx > 0 && bidx <= len(mm.Segment[bseg].MissionItems) {
+			bidx -= 1
 		}
 		blat0 = mm.Segment[bseg].MissionItems[bidx].Lat
 		blon0 = mm.Segment[bseg].MissionItems[bidx].Lon
