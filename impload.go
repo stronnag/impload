@@ -31,7 +31,7 @@ type DevDescription struct {
 }
 
 var (
-	rebase     = flag.String("rebase", "", "rebase 1st WP to location (as lat,lon)")
+	rebase     = flag.String("rebase", "", "rebase 1st WP to location (as lat,lon[,wpno,segno)")
 	defalt     = flag.Int("a", 20, "Default altitude (m)")
 	baud       = flag.Int("b", 115200, "Baud rate")
 	device     = flag.String("d", "", "Serial Device")

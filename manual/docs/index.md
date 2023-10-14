@@ -47,30 +47,32 @@ Usage
 
 Run the executable for your platform in a terminal (Windows `cmd` or `powershell`). The majority of the examples are from Linux where the serial device should be auto-detected; the examples are also relevant to MacOS and Windows, however you will need to specifically define the serial device, e.g. `-d COM7` on Windows, `-d /dev/tty.usbmodem14211` on MacO (where 14221 is possibly a random number).
 
-    $ impload -help
+    $ impload --help
     Usage of impload [options] command [files ...]
     Options:
-      -a int
-        	Default altitude (m) (default 20)
-      -b int
-        	Baud rate (default 115200)
-      -d string
-        	Serial Device
-      -fmt string
-        	Output format (xml, json, cli, xml-ugly) (default "xml")
-      -force-land
-        	Adds RTH / Land for 'external' formats
-      -force-rth
-        	Adds RTH for 'external' formats
-      -s float
-        	Default speed (m/s)
-      -v	Shows version
-      -verbose
-    	    Verbose
-      command:
-    	Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
+     -a int
+    	Default altitude (m) (default 20)
+     -b int
+    	Baud rate (default 115200)
+     -d string
+    	Serial Device
+     -fmt string
+    	Output format (xml, json, md, cli, xml-ugly) (default "xml")
+     -force-land
+    	Adds RTH / Land for 'external' formats
+     -force-rth
+    	Adds RTH for 'external' formats
+     -rebase string
+    	rebase 1st WP to location (as lat,lon[,wpno,segno)
+     -s float
+    	Default speed (m/s)
+     -v	Shows version
+     -verbose
+    	Verbose
+     command:
+	   Action required (upload|download|store|restore|convert|test|clear|erase|multi[=n])
 
-    impload v3.320.671, commit: c4c057e / 2021-11-16
+    impload v5.162.398-4-ge63df6c, commit: e63df6c / 2023-10-14
 
 Commands
 --------
@@ -129,6 +131,8 @@ necessary to specify the device name / node.
 -   `-force-rth` : For GPX only, adds RTH after the final waypoint.
 
 -   `-force-land` : For GPX only, adds RTH with land after the final waypoint.
+
+The `-rebase` option takes between 2 and 4 values, the first two are the latitude and longitude of the new base location. Without anything else, all new locations are based off WP1 in mission segment 1. The user can specify the WP number, and the multi-mission segment to be used in the third and forth parameters, for example `-rebase=35.762324,140.377314,2` would position WP2 of the relocated mission at the given location, with all other WPs relocated _pro-rata_.
 
 ### Device Names
 
