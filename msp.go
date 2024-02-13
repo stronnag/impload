@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"go.bug.st/serial"
+	"github.com/albenik/go-serial/v2"
 	"log"
 	"net"
 	"os"
@@ -295,7 +295,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 func NewMSPSerial(dd DevDescription) *MSPSerial {
 	switch dd.klass {
 	case DevClass_SERIAL:
-		p, err := serial.Open(dd.name, &serial.Mode{BaudRate: dd.param})
+		p, err := serial.Open(dd.name, serial.WithBaudrate(dd.param))
 		if err != nil {
 			log.Fatal(err)
 		}
