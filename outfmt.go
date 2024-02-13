@@ -142,6 +142,10 @@ func (mm *MultiMission) Update_mission_meta() {
 		mm.Segment[i].Metadata.Zoom = evince_zoom(bbox)
 		mm.Segment[i].Metadata.Generator = "impload"
 		mm.Segment[i].Metadata.Stamp = time.Now().Format(time.RFC3339)
+		if mm.Segment[i].Metadata.Details.Distance.Value == 0 {
+			mm.Segment[i].Metadata.Details.Distance.Value = -1
+			mm.Segment[i].Metadata.Details.Distance.Units = "unknown"
+		}
 	}
 }
 

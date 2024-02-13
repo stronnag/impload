@@ -31,6 +31,8 @@ const (
 	msp_COMMON_SETTING     = 0x1003
 	msp_COMMON_SET_SETTING = 0x1004
 	msp_EEPROM_WRITE       = 250
+	msp_FW_APPROACH        = 0x204a
+	msp_SET_FW_APPROACH    = 0x204b
 )
 
 const (
@@ -88,6 +90,7 @@ var (
 	Wp_count byte
 	use_v2   bool
 	dumphex  bool
+	fcvers   uint32
 )
 
 func crc8_dvb_s2(crc byte, a byte) byte {
@@ -393,6 +396,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				fw = string(v.data[0:4])
 				m.Send_msp(msp_FC_VERSION, nil)
 			case msp_FC_VERSION:
+				fcvers = uint32(v.data[0])<<16 | uint32(v.data[1])<<8 | uint32(v.data[2])
 				vers = fmt.Sprintf("%d.%d.%d", v.data[0], v.data[1], v.data[2])
 				m.Send_msp(msp_BUILD_INFO, nil)
 			case msp_BUILD_INFO:
@@ -506,6 +510,30 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	return len(buf), buf
 }
 
+func serialise_fwa(fwa FWApproach) (int, []byte) {
+	buf := make([]byte, 15)
+	buf[0] = byte(fwa.No)
+	binary.LittleEndian.PutUint32(buf[1:5], uint32(fwa.Appalt))
+	binary.LittleEndian.PutUint32(buf[5:9], uint32(fwa.Landalt))
+	if fwa.Dref == "right" {
+		buf[9] = 1
+	} else {
+		buf[9] = 0
+	}
+	binary.LittleEndian.PutUint16(buf[10:12], uint16(fwa.Dirn1))
+	binary.LittleEndian.PutUint16(buf[12:14], uint16(fwa.Dirn2))
+	if fwa.Aref {
+		buf[14] = 1
+	} else {
+		buf[14] = 0
+	}
+	if dumphex {
+		fmt.Fprintf(os.Stderr, "FWA\n")
+		hexdump(buf)
+	}
+	return len(buf), buf
+}
+
 func hexdump(buf []byte) {
 	for _, b := range buf {
 		fmt.Fprintf(os.Stderr, "%02x ", b)
@@ -537,7 +565,34 @@ func (m *MSPSerial) download(eeprom bool) *MultiMission {
 			}
 		}
 	}
-	return NewMultiMission(mis)
+	var mm = NewMultiMission(mis)
+	if fcvers >= 0x70100 {
+		for j := range mm.Segment {
+			var z = make([]byte, 1)
+			z[0] = byte(j) + 8
+			v := m.Wait_msp(msp_FW_APPROACH, z)
+			if v.ok {
+				var fwa = deserialise_fwa(j, v.data)
+				mm.Segment[j].FWApproach = fwa
+			}
+		}
+	}
+	return mm
+}
+
+func deserialise_fwa(j int, b []byte) FWApproach {
+	fwa := FWApproach{No: int8(b[0]), Index: int8(j)}
+	fwa.Appalt = int32(binary.LittleEndian.Uint32(b[1:5]))
+	fwa.Landalt = int32(binary.LittleEndian.Uint32(b[5:9]))
+	if b[9] == 1 {
+		fwa.Dref = "right"
+	} else {
+		fwa.Dref = "left"
+	}
+	fwa.Dirn1 = int16(binary.LittleEndian.Uint16(b[10:12]))
+	fwa.Dirn2 = int16(binary.LittleEndian.Uint16(b[12:14]))
+	fwa.Aref = (b[14] == 1)
+	return fwa
 }
 
 func deserialise_wp(b []byte) (bool, MissionItem) {
@@ -583,6 +638,11 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 				if *verbose {
 					fmt.Fprintf(os.Stderr, "Buf %d %d\n", b[0], b[20])
 				}
+			}
+			if fcvers >= 0x70100 && ms.FWApproach.No > 7 {
+				_, b := serialise_fwa(ms.FWApproach)
+				s.Wait_msp(msp_SET_FW_APPROACH, b)
+				fmt.Printf("upload FWApproach %d/%d\n", ms.FWApproach.Index, ms.FWApproach.No)
 			}
 		}
 		fmt.Printf("upload %d, save %v\n", i, eeprom)

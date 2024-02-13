@@ -92,9 +92,21 @@ type MissionDetail struct {
 	} `xml:"distance,omitempty" json:"distance,omitempty"`
 }
 
+type FWApproach struct {
+	No      int8   `xml:"no,attr" json:"no"`
+	Index   int8   `xml:"index,attr" json:"index"`
+	Appalt  int32  `xml:"approachalt,attr" json:"appalt"`
+	Landalt int32  `xml:"landalt,attr" json:"landalt"`
+	Dirn1   int16  `xml:"landheading1,attr" json:"dirn1"`
+	Dirn2   int16  `xml:"landheading2,attr" json:"dirn2"`
+	Dref    string `xml:"approachdirection,attr" json:"dref"`
+	Aref    bool   `xml:"sealevelref,attr" json:"aref"`
+}
+
 type MissionSegment struct {
 	Metadata     MissionMWP    `xml:"meta" json:"meta"`
 	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
+	FWApproach   FWApproach    `xml:"fwapproach" json:"fwapproach"`
 }
 
 type MultiMission struct {
@@ -110,6 +122,7 @@ type Mission struct {
 	Comment      string        `xml:",comment" json:"-"`
 	Metadata     []MissionMWP  `xml:"meta" json:"meta"`
 	MissionItems []MissionItem `xml:"missionitem" json:"mission"`
+	FWApproach   FWApproach    `xml:"fwapproach" json:"fwapproach"`
 }
 
 // Custom encoder to avoid element tags around each segment
@@ -122,6 +135,11 @@ func (ml *MissionSegment) MarshalXML(e *xml.Encoder, start xml.StartElement) err
 		if err := e.EncodeElement(mi, xml.StartElement{Name: xml.Name{Local: "missionitem"}}); err != nil {
 			return err
 		}
+	}
+
+	if ml.FWApproach.No > 7 && ml.FWApproach.Dirn1 != 0 && ml.FWApproach.Dirn2 != 0 {
+		err := e.EncodeElement(ml.FWApproach, xml.StartElement{Name: xml.Name{Local: "fwapproach"}})
+		return err
 	}
 	return nil
 }
@@ -662,6 +680,8 @@ func read_xml_mission(dat []byte) *MultiMission {
 	mis := []MissionItem{}
 	buf := bytes.NewBuffer(dat)
 	dec := xml.NewDecoder(buf)
+	fwa := []FWApproach{}
+
 	for {
 		t, _ := dec.Token()
 		if t == nil {
@@ -681,6 +701,10 @@ func read_xml_mission(dat []byte) *MultiMission {
 				var mi MissionItem
 				dec.DecodeElement(&mi, &se)
 				mis = append(mis, mi)
+			case "fwapproach":
+				var f FWApproach
+				dec.DecodeElement(&f, &se)
+				fwa = append(fwa, f)
 			default:
 				fmt.Printf("Unknown MWXML tag %s\n", se.Name.Local)
 			}
@@ -691,6 +715,11 @@ func read_xml_mission(dat []byte) *MultiMission {
 	for j := range mm.Segment {
 		if j < len(mwps) {
 			mm.Segment[j].Metadata = mwps[j]
+		}
+		for k := range fwa {
+			if fwa[k].Index == int8(j) {
+				mm.Segment[j].FWApproach = fwa[k]
+			}
 		}
 	}
 	return mm
@@ -725,6 +754,7 @@ func read_json(dat []byte, flg int) *MultiMission {
 		json.Unmarshal(dat, m)
 		mm := NewMultiMission(m.MissionItems)
 		return mm
+
 	case 1:
 		mm := &MultiMission{}
 		json.Unmarshal(dat, mm)
