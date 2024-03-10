@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -81,9 +82,9 @@ type SerDev interface {
 }
 
 type MSPSerial struct {
-	klass int
-	sd    SerDev
-	c0    chan MsgData
+	sd     SerDev
+	c0     chan MsgData
+	packet bool
 }
 
 var (
@@ -155,129 +156,140 @@ func encode_msp(cmd uint16, payload []byte) []byte {
 }
 
 func (m *MSPSerial) Read_msp(c0 chan MsgData) {
-	inp := make([]byte, 128)
+	inp := make([]byte, 256)
 	var sc MsgData
 	var count = uint16(0)
 	var crc = byte(0)
-
+	req := 1
 	n := state_INIT
 
 	for {
-		nb, err := m.sd.Read(inp)
-		if err == nil && nb > 0 {
-			for i := 0; i < nb; i++ {
-				switch n {
-				case state_INIT:
-					if inp[i] == '$' {
-						n = state_M
-						sc.ok = false
-						sc.len = 0
-						sc.cmd = 0
-					}
-				case state_M:
-					if inp[i] == 'M' {
-						n = state_DIRN
-					} else if inp[i] == 'X' {
-						n = state_X_HEADER2
-					} else {
+		if m.packet {
+			req = len(inp)
+		}
+		nb, err := m.sd.Read(inp[:req])
+		if err == nil {
+			if nb == 0 {
+				time.Sleep(100 * time.Microsecond)
+			} else {
+				for i := 0; i < nb; i++ {
+					switch n {
+					case state_INIT:
+						if inp[i] == '$' {
+							n = state_M
+							sc.ok = false
+							sc.len = 0
+							sc.cmd = 0
+						}
+					case state_M:
+						if inp[i] == 'M' {
+							n = state_DIRN
+						} else if inp[i] == 'X' {
+							n = state_X_HEADER2
+						} else {
+							n = state_INIT
+						}
+					case state_DIRN:
+						if inp[i] == '!' {
+							n = state_LEN
+						} else if inp[i] == '>' {
+							n = state_LEN
+							sc.ok = true
+						} else {
+							n = state_INIT
+						}
+
+					case state_X_HEADER2:
+						if inp[i] == '!' {
+							n = state_X_FLAGS
+						} else if inp[i] == '>' {
+							n = state_X_FLAGS
+							sc.ok = true
+						} else {
+							n = state_INIT
+						}
+
+					case state_X_FLAGS:
+						crc = crc8_dvb_s2(0, inp[i])
+						n = state_X_ID1
+
+					case state_X_ID1:
+						crc = crc8_dvb_s2(crc, inp[i])
+						sc.cmd = uint16(inp[i])
+						n = state_X_ID2
+
+					case state_X_ID2:
+						crc = crc8_dvb_s2(crc, inp[i])
+						sc.cmd |= (uint16(inp[i]) << 8)
+						n = state_X_LEN1
+
+					case state_X_LEN1:
+						crc = crc8_dvb_s2(crc, inp[i])
+						sc.len = uint16(inp[i])
+						n = state_X_LEN2
+
+					case state_X_LEN2:
+						crc = crc8_dvb_s2(crc, inp[i])
+						sc.len |= (uint16(inp[i]) << 8)
+						if sc.len > 0 {
+							n = state_X_DATA
+							count = 0
+							sc.data = make([]byte, sc.len)
+							req = int(sc.len)
+						} else {
+							n = state_X_CHECKSUM
+						}
+					case state_X_DATA:
+						crc = crc8_dvb_s2(crc, inp[i])
+						sc.data[count] = inp[i]
+						count++
+						if count == sc.len {
+							n = state_X_CHECKSUM
+							req = 1
+						}
+
+					case state_X_CHECKSUM:
+						ccrc := inp[i]
+						if crc != ccrc {
+							fmt.Fprintf(os.Stderr, "CRC error on %d\n", sc.cmd)
+						} else {
+							c0 <- sc
+						}
+						n = state_INIT
+
+					case state_LEN:
+						sc.len = uint16(inp[i])
+						crc = inp[i]
+						n = state_CMD
+					case state_CMD:
+						sc.cmd = uint16(inp[i])
+						crc ^= inp[i]
+						if sc.len == 0 {
+							n = state_CRC
+						} else {
+							sc.data = make([]byte, sc.len)
+							req = int(sc.len)
+							n = state_DATA
+							count = 0
+						}
+					case state_DATA:
+						sc.data[count] = inp[i]
+						crc ^= inp[i]
+						count++
+						if count == sc.len {
+							n = state_CRC
+							req = 1
+						}
+					case state_CRC:
+						ccrc := inp[i]
+						if crc != ccrc {
+							fmt.Fprintf(os.Stderr, "CRC error on %d\n", sc.cmd)
+						} else {
+							//						fmt.Fprintf(os.Stderr, "Cmd %v Len %v\n", sc.cmd, sc.len)
+							c0 <- sc
+						}
 						n = state_INIT
 					}
-				case state_DIRN:
-					if inp[i] == '!' {
-						n = state_LEN
-					} else if inp[i] == '>' {
-						n = state_LEN
-						sc.ok = true
-					} else {
-						n = state_INIT
-					}
-
-				case state_X_HEADER2:
-					if inp[i] == '!' {
-						n = state_X_FLAGS
-					} else if inp[i] == '>' {
-						n = state_X_FLAGS
-						sc.ok = true
-					} else {
-						n = state_INIT
-					}
-
-				case state_X_FLAGS:
-					crc = crc8_dvb_s2(0, inp[i])
-					n = state_X_ID1
-
-				case state_X_ID1:
-					crc = crc8_dvb_s2(crc, inp[i])
-					sc.cmd = uint16(inp[i])
-					n = state_X_ID2
-
-				case state_X_ID2:
-					crc = crc8_dvb_s2(crc, inp[i])
-					sc.cmd |= (uint16(inp[i]) << 8)
-					n = state_X_LEN1
-
-				case state_X_LEN1:
-					crc = crc8_dvb_s2(crc, inp[i])
-					sc.len = uint16(inp[i])
-					n = state_X_LEN2
-
-				case state_X_LEN2:
-					crc = crc8_dvb_s2(crc, inp[i])
-					sc.len |= (uint16(inp[i]) << 8)
-					if sc.len > 0 {
-						n = state_X_DATA
-						count = 0
-						sc.data = make([]byte, sc.len)
-					} else {
-						n = state_X_CHECKSUM
-					}
-				case state_X_DATA:
-					crc = crc8_dvb_s2(crc, inp[i])
-					sc.data[count] = inp[i]
-					count++
-					if count == sc.len {
-						n = state_X_CHECKSUM
-					}
-
-				case state_X_CHECKSUM:
-					ccrc := inp[i]
-					if crc != ccrc {
-						fmt.Fprintf(os.Stderr, "CRC error on %d\n", sc.cmd)
-					} else {
-						c0 <- sc
-					}
-					n = state_INIT
-
-				case state_LEN:
-					sc.len = uint16(inp[i])
-					crc = inp[i]
-					n = state_CMD
-				case state_CMD:
-					sc.cmd = uint16(inp[i])
-					crc ^= inp[i]
-					if sc.len == 0 {
-						n = state_CRC
-					} else {
-						sc.data = make([]byte, sc.len)
-						n = state_DATA
-						count = 0
-					}
-				case state_DATA:
-					sc.data[count] = inp[i]
-					crc ^= inp[i]
-					count++
-					if count == sc.len {
-						n = state_CRC
-					}
-				case state_CRC:
-					ccrc := inp[i]
-					if crc != ccrc {
-						fmt.Fprintf(os.Stderr, "CRC error on %d\n", sc.cmd)
-					} else {
-						//						fmt.Fprintf(os.Stderr, "Cmd %v Len %v\n", sc.cmd, sc.len)
-						c0 <- sc
-					}
-					n = state_INIT
 				}
 			}
 		} else {
@@ -295,14 +307,18 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 func NewMSPSerial(dd DevDescription) *MSPSerial {
 	switch dd.klass {
 	case DevClass_SERIAL:
-		p, err := serial.Open(dd.name, serial.WithBaudrate(dd.param))
+		p, err := serial.Open(dd.name, serial.WithBaudrate(dd.param), serial.WithReadTimeout(1))
 		if err != nil {
 			log.Fatal(err)
+		} else {
+			p.SetFirstByteReadTimeout(100)
+			p.ResetInputBuffer()
+			p.ResetOutputBuffer()
 		}
-		return &MSPSerial{klass: dd.klass, sd: p}
+		return &MSPSerial{packet: false, sd: p}
 	case DevClass_BT:
 		bt := NewBT(dd.name)
-		return &MSPSerial{klass: dd.klass, sd: bt}
+		return &MSPSerial{packet: false, sd: bt}
 	case DevClass_TCP:
 		var conn net.Conn
 		remote := fmt.Sprintf("%s:%d", dd.name, dd.param)
@@ -313,7 +329,7 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return &MSPSerial{klass: dd.klass, sd: conn}
+		return &MSPSerial{packet: false, sd: conn}
 	case DevClass_UDP:
 		var laddr, raddr *net.UDPAddr
 		var conn net.Conn
@@ -334,7 +350,7 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return &MSPSerial{klass: dd.klass, sd: conn}
+		return &MSPSerial{packet: true, sd: conn}
 	default:
 		fmt.Fprintln(os.Stderr, "Unsupported device")
 		os.Exit(1)
@@ -408,13 +424,13 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				} else {
 					board = string(v.data[0:4])
 				}
-				fmt.Printf("%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
+				fmt.Fprintf(os.Stderr, "%s v%s %s (%s) API %s", fw, vers, board, gitrev, api)
 				m.Send_msp(msp_NAME, nil)
 			case msp_NAME:
 				if v.len > 0 {
-					fmt.Printf(" \"%s\"\n", v.data)
+					fmt.Fprintf(os.Stderr, " \"%s\"\n", v.data)
 				} else {
-					fmt.Println()
+					fmt.Fprintln(os.Stderr)
 				}
 				if Wp_count == 0 {
 					z := make([]byte, 1)
@@ -430,8 +446,11 @@ func MSPInit(dd DevDescription) *MSPSerial {
 				MaxWP = int(wp_max)
 				wp_valid := v.data[2]
 				Wp_count = v.data[3]
-				fmt.Printf("Extant waypoints in FC: %d of %d, valid %d\n", Wp_count, wp_max, wp_valid)
+				fmt.Fprintf(os.Stderr, "Extant waypoints in FC: %d of %d, valid %d\n", Wp_count, wp_max, wp_valid)
 				done = true
+			case msp_DEBUGMSG:
+				str := strings.Trim(string(v.data), "\x00\t\r\n ")
+				fmt.Fprintf(os.Stderr, "Debug: %s\n", str)
 			default:
 				fmt.Fprintf(os.Stderr, "Unsolicited %d, length %d\n", v.cmd, v.len)
 			}
@@ -546,7 +565,7 @@ func (m *MSPSerial) download(eeprom bool) *MultiMission {
 		z := make([]byte, 1)
 		z[0] = 1
 		m.Wait_msp(msp_WP_MISSION_LOAD, z)
-		fmt.Printf("Restored mission\n")
+		fmt.Fprintf(os.Stderr, "Restored mission\n")
 	}
 
 	v := m.Wait_msp(msp_WP_GETINFO, nil)
@@ -613,7 +632,7 @@ func deserialise_wp(b []byte) (bool, MissionItem) {
 	last := (b[20] == 0xa5)
 	item := MissionItem{No: int(b[0]), Lat: lat, Lon: lon, Alt: alt, Action: action, P1: p1, P2: p2, P3: p3, Flag: b[20]}
 	if *verbose {
-		fmt.Printf("D: %d %d\n", b[0], b[20])
+		fmt.Fprintf(os.Stderr, "D: %d %d\n", b[0], b[20])
 	}
 	return last, item
 }
@@ -628,7 +647,7 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 				i++
 				v.No = i
 				if *verbose == false {
-					fmt.Printf("Upload %d\r", i)
+					fmt.Fprintf(os.Stderr, "Upload %d\r", i)
 				}
 				_, b := serialise_wp(v, (i == mlen))
 				if *verbose {
@@ -642,10 +661,10 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 			if fcvers >= 0x70100 && ms.FWApproach.No > 7 {
 				_, b := serialise_fwa(ms.FWApproach)
 				s.Wait_msp(msp_SET_FW_APPROACH, b)
-				fmt.Printf("upload FWApproach %d/%d\n", ms.FWApproach.Index, ms.FWApproach.No)
+				fmt.Fprintf(os.Stderr, "upload FWApproach %d/%d\n", ms.FWApproach.Index, ms.FWApproach.No)
 			}
 		}
-		fmt.Printf("upload %d, save %v\n", i, eeprom)
+		fmt.Fprintf(os.Stderr, "upload %d, save %v\n", i, eeprom)
 
 		if eeprom {
 			z := make([]byte, 1)
@@ -653,15 +672,15 @@ func (s *MSPSerial) upload(mm *MultiMission, eeprom bool) {
 			t := time.Now()
 			s.Wait_msp(msp_WP_MISSION_SAVE, z)
 			et := time.Since(t)
-			fmt.Printf("Saved mission (%s)\n", et)
+			fmt.Fprintf(os.Stderr, "Saved mission (%s)\n", et)
 		}
 		v := s.Wait_msp(msp_WP_GETINFO, nil)
 		wp_max := v.data[1]
 		wp_valid := v.data[2]
 		wp_count := v.data[3]
-		fmt.Printf("Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
+		fmt.Fprintf(os.Stderr, "Waypoints: %d of %d, valid %d\n", wp_count, wp_max, wp_valid)
 	} else {
-		fmt.Printf("Mission fails verification, upload cancelled\n")
+		fmt.Fprintf(os.Stderr, "Mission fails verification, upload cancelled\n")
 	}
 }
 
@@ -672,7 +691,7 @@ func (m *MSPSerial) get_multi_index() {
 	buf[lstr] = 0
 	v := m.Wait_msp(msp_COMMON_SETTING, buf)
 	if v.len > 0 {
-		fmt.Printf("Multi index %d\n", v.data[0])
+		fmt.Fprintf(os.Stderr, "Multi index %d\n", v.data[0])
 	}
 }
 
