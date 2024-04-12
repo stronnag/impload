@@ -1,6 +1,6 @@
 prefix ?= $(HOME)/.local
 APP = impload
-GOFILES = btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go mission-read.go  outfmt.go enumerate_port.go geo/geocalc.go
+GOFILES = btaddr_linux.go impload.go msp.go util.go btaddr_other.go mission.go mission-read.go  outfmt.go serial-manager.go serial-manager-darwin.go geo/geocalc.go
 
 IMPTAG=$(shell git describe --tag 2>/dev/null||echo notag)
 IMPDATE=$(shell date +%F)
