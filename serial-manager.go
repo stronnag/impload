@@ -1,8 +1,13 @@
+//go:build !darwin
+// +build !darwin
+
 package main
 
 import (
 	"fmt"
 	"github.com/albenik/go-serial/enumerator"
+	"github.com/albenik/go-serial/v2"
+	"log"
 	"os"
 	"runtime"
 )
@@ -31,4 +36,16 @@ func enumerate_ports() (string, error) {
 		}
 	}
 	return "", err
+}
+
+func open_serial_port(dd DevDescription) *MSPSerial {
+	p, err := serial.Open(dd.name, serial.WithBaudrate(dd.param), serial.WithReadTimeout(1))
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		p.SetFirstByteReadTimeout(100)
+		p.ResetInputBuffer()
+		p.ResetOutputBuffer()
+	}
+	return &MSPSerial{packet: false, sd: p}
 }

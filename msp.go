@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/albenik/go-serial/v2"
 	"log"
 	"net"
 	"os"
@@ -307,15 +306,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 func NewMSPSerial(dd DevDescription) *MSPSerial {
 	switch dd.klass {
 	case DevClass_SERIAL:
-		p, err := serial.Open(dd.name, serial.WithBaudrate(dd.param), serial.WithReadTimeout(1))
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			p.SetFirstByteReadTimeout(100)
-			p.ResetInputBuffer()
-			p.ResetOutputBuffer()
-		}
-		return &MSPSerial{packet: false, sd: p}
+		return open_serial_port(dd)
 	case DevClass_BT:
 		bt := NewBT(dd.name)
 		return &MSPSerial{packet: false, sd: bt}

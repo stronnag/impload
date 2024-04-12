@@ -6,6 +6,7 @@ require (
 	geo v1.0.0
 	github.com/albenik/go-serial v1.2.0
 	github.com/albenik/go-serial/v2 v2.6.1
+	go.bug.st/serial v1.6.2
 	golang.org/x/sys v0.6.0
 )
 
