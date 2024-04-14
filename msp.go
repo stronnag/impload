@@ -86,6 +86,21 @@ type MSPSerial struct {
 	packet bool
 }
 
+type HexArray []byte
+
+func (h HexArray) String() string {
+	var b strings.Builder
+	b.WriteString("[")
+	for n, v := range h {
+		fmt.Fprintf(&b, "0x%02x", v)
+		if n != len(h)-1 {
+			b.WriteString(", ")
+		}
+	}
+	b.WriteString("]")
+	return b.String()
+}
+
 var (
 	Wp_count byte
 	use_v2   bool
@@ -126,8 +141,7 @@ func encode_msp2(cmd uint16, payload []byte) []byte {
 	}
 	buf[8+paylen] = crc
 	if dumphex {
-		fmt.Fprintf(os.Stderr, "MSPV2 %d\n", cmd)
-		hexdump(buf)
+		fmt.Fprintf(os.Stderr, "MSPV2 < %d %s\n", cmd, HexArray(buf))
 	}
 	return buf
 }
@@ -252,6 +266,9 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 						if crc != ccrc {
 							fmt.Fprintf(os.Stderr, "CRC error on %d\n", sc.cmd)
 						} else {
+							if dumphex {
+								fmt.Fprintf(os.Stderr, "MSPV2 > %d %s\n", sc.cmd, HexArray(sc.data))
+							}
 							c0 <- sc
 						}
 						n = state_INIT
@@ -350,7 +367,12 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 }
 
 func (m *MSPSerial) Send_msp(cmd uint16, payload []byte) {
-	buf := encode_msp(cmd, payload)
+	var buf []byte
+	if use_v2 {
+		buf = encode_msp2(cmd, payload)
+	} else {
+		buf = encode_msp(cmd, payload)
+	}
 	m.sd.Write(buf)
 }
 
@@ -380,7 +402,10 @@ func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
 func MSPInit(dd DevDescription) *MSPSerial {
 	var fw, api, vers, board, gitrev string
 
-	dumphex = os.Getenv("IMPLOAD_DUMPHEX") != ""
+	if os.Getenv("IMPLOAD_DUMPHEX") != "" {
+		dumphex = true
+		use_v2 = true
+	}
 
 	m := NewMSPSerial(dd)
 
@@ -514,8 +539,7 @@ func serialise_wp(mi MissionItem, last bool) (int, []byte) {
 	binary.LittleEndian.PutUint16(buf[18:20], uint16(mi.P3))
 	buf[20] = mi.Flag
 	if dumphex {
-		fmt.Fprintf(os.Stderr, "WP %d\n", mi.No)
-		hexdump(buf)
+		fmt.Fprintf(os.Stderr, "WP %d %s\n", mi.No, HexArray(buf))
 	}
 	return len(buf), buf
 }
@@ -538,8 +562,7 @@ func serialise_fwa(fwa FWApproach) (int, []byte) {
 		buf[14] = 0
 	}
 	if dumphex {
-		fmt.Fprintf(os.Stderr, "FWA\n")
-		hexdump(buf)
+		fmt.Fprintf(os.Stderr, "FWA %s\n", HexArray(buf))
 	}
 	return len(buf), buf
 }
