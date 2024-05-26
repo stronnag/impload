@@ -106,6 +106,9 @@ var (
 	use_v2   bool
 	dumphex  bool
 	fcvers   uint32
+	rxbytes  int
+	txbytes  int
+	is_weak  uint8
 )
 
 func crc8_dvb_s2(crc byte, a byte) byte {
@@ -185,6 +188,7 @@ func (m *MSPSerial) Read_msp(c0 chan MsgData) {
 			if nb == 0 {
 				time.Sleep(100 * time.Microsecond)
 			} else {
+				rxbytes += nb
 				for i := 0; i < nb; i++ {
 					switch n {
 					case state_INIT:
@@ -368,23 +372,25 @@ func NewMSPSerial(dd DevDescription) *MSPSerial {
 
 func (m *MSPSerial) Send_msp(cmd uint16, payload []byte) {
 	var buf []byte
-	if use_v2 {
-		buf = encode_msp2(cmd, payload)
-	} else {
-		buf = encode_msp(cmd, payload)
-	}
-	m.sd.Write(buf)
-}
-
-func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
-	var buf []byte
 	if use_v2 || cmd > 255 {
 		buf = encode_msp2(cmd, payload)
 	} else {
 		buf = encode_msp(cmd, payload)
 	}
-	m.sd.Write(buf)
+	if is_weak == 0 {
+		nb, _ := m.sd.Write(buf)
+		txbytes += nb
+	} else {
+		for n, _ := range buf {
+			nb, _ := m.sd.Write(buf[n : n+1])
+			txbytes += nb
+			time.Sleep((time.Duration(is_weak) * time.Millisecond))
+		}
+	}
+}
 
+func (m *MSPSerial) Wait_msp(cmd uint16, payload []byte) MsgData {
+	m.Send_msp(cmd, payload)
 	var v MsgData
 	for done := false; !done; {
 		select {
@@ -412,6 +418,7 @@ func MSPInit(dd DevDescription) *MSPSerial {
 	m.c0 = make(chan MsgData)
 	go m.Read_msp(m.c0)
 
+	st := time.Now()
 	m.Send_msp(msp_API_VERSION, nil)
 
 	for done := false; !done; {
@@ -472,6 +479,17 @@ func MSPInit(dd DevDescription) *MSPSerial {
 			}
 		}
 	}
+	et := time.Since(st)
+	tbytes := rxbytes + txbytes
+	rate := float64(tbytes) / et.Seconds()
+	if rate < 200 {
+		is_weak = 2
+	} else if rate < 800 {
+		is_weak = 1
+	} else {
+		is_weak = 0
+	}
+	fmt.Fprintf(os.Stderr, "Initialised (%.1f/%d)\n", rate, is_weak)
 	return m
 }
 
