@@ -65,7 +65,8 @@ For ESP8288 transparent serial over UDP (the recommended mode for ESP8266), the 
 ```
 /dev/ttyUSB0@57600
 /dev/ttyACM0
-COM17@115200
+COM7@115200
+\\.\COM17@115200
 tcp://esp8266:23
 udp://:14014/esp-air:14014
 # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY.
@@ -152,7 +153,7 @@ INAV v2.1.0 SPRACINGF3 (a29bfbd1) API 2.2
 Waypoints: 12 of 60, valid 1
 
 > REM  Windows, needs a named device to be given
-> impload -d COM17 upload samples/google-earth-mission.kml
+> impload -d \\.\COM17 upload samples/google-earth-mission.kml
 
 # Conversion
 $ impload convert g-earth.kmz example.mission

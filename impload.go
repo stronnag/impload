@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -155,6 +156,9 @@ func check_device() DevDescription {
 	if devdesc.klass == DevClass_NONE {
 		log.Fatalln("No device available")
 	} else {
+		if runtime.GOOS == "windows" && strings.HasPrefix(*device, "COM") {
+			*device = "\\\\.\\" + *device
+		}
 		log.Printf("Using device [%v]\n", *device)
 	}
 	return devdesc

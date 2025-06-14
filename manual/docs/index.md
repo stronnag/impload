@@ -154,7 +154,7 @@ For ESP8266 transparent serial over UDP (the recommended mode for ESP8266), one 
 
     /dev/ttyUSB0@57600
     /dev/ttyACM0
-    COM17@115200
+    \\.\COM17@115200
     tcp://esp8266:23
     udp://:14014/esp-air:14014
     # both sides use port 14014, remote (FC) is esp-air, blank local name is understood as INADDR_ANY. Last above is same as:
