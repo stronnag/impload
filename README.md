@@ -1,3 +1,5 @@
+**Migrated to [CODEBERG](https://codeberg.org/stronnag/impload)**
+
 impload - iNav Mission Plan uploader
 ====================================
 
